@@ -14,6 +14,7 @@ dependencies = [
   "asyncpg>=0.29.0",
   "bcrypt>=4.2.0",
   "celery[redis]>=5.4.0",
+  "email-validator>=2.2.0",
   "elasticsearch[async]>=8.13.0",
   "feedparser>=6.0.11",
   "fastapi>=0.115.0",
@@ -22,6 +23,7 @@ dependencies = [
   "openai>=1.54.0",
   "passlib[bcrypt]>=1.7.4",
   "pydantic-settings>=2.4.0",
+  "PyJWT>=2.9.0",
   "python-dateutil>=2.9.0.post0",
   "python-dotenv>=1.0.1",
   "redis>=5.0.8",
@@ -34,6 +36,7 @@ dependencies = [
 dev = [
   "pytest>=8.3.2",
   "pytest-asyncio>=0.23.8",
+  "pytest-mock>=3.14.0",
   "ruff>=0.6.2",
 ]
 
