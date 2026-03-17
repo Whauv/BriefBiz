@@ -17,4 +17,6 @@ def run_news_ingestion() -> dict[str, int]:
 
 @celery_app.task(name="briefbiz.articles.summarize")
 def summarize_article(article_id: int) -> dict[str, int | str]:
-    return {"article_id": article_id, "status": "queued"}
+    from app.workers.enrichment import ArticleEnrichmentWorker
+
+    return asyncio.run(ArticleEnrichmentWorker().process_article(article_id))

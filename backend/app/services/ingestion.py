@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.article import Article, ArticleVertical
 from app.models.company import ArticleCompany, Company
 from app.schemas.ingestion import SourceArticle
+from app.services.enrichment import source_quality_score
 from app.utils.hashing import hash_url
 from app.utils.slug import slugify
 
@@ -34,6 +35,7 @@ class ArticleIngestionService:
             url=str(source_article.url),
             url_hash=hash_url(str(source_article.url)),
             source_name=source_article.source_name,
+            source_quality_score=source_quality_score(source_article.source_name),
             published_at=source_article.published_at,
             raw_content=source_article.raw_content,
             vertical=vertical,
