@@ -17,4 +17,3 @@ async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
 
 async def close_db_engine() -> None:
     await engine.dispose()
-

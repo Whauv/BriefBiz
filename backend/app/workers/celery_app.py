@@ -17,5 +17,10 @@ celery_app.conf.update(
     result_serializer="json",
     timezone="UTC",
     enable_utc=True,
+    beat_schedule={
+        "ingest-news-every-15-minutes": {
+            "task": "briefbiz.ingestion.run",
+            "schedule": 15 * 60,
+        },
+    },
 )
-
