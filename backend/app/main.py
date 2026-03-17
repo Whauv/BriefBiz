@@ -1,6 +1,9 @@
+from pathlib import Path
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 
 from app.api.router import api_router
 from app.core.config import get_settings
@@ -24,3 +27,6 @@ async def lifespan(_: FastAPI):
 
 app = FastAPI(title="BriefBiz API", version="0.1.0", lifespan=lifespan)
 app.include_router(api_router)
+media_dir = Path(__file__).resolve().parents[1] / "media"
+media_dir.mkdir(parents=True, exist_ok=True)
+app.mount("/media", StaticFiles(directory=media_dir), name="media")
