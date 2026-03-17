@@ -76,6 +76,7 @@ class Article(Base):
     region: Mapped[str | None] = mapped_column(String(128))
     image_url: Mapped[str | None] = mapped_column(Text())
     audio_url: Mapped[str | None] = mapped_column(Text())
+    why_it_matters: Mapped[str | None] = mapped_column(String(120))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
