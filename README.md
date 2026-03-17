@@ -13,14 +13,12 @@ BriefBiz/
 
 ## Current Status
 
-Phase 1 is complete:
+Current `main` includes Phases 1-4:
 
-- FastAPI backend scaffold with async infrastructure clients
-- Celery worker bootstrap with Redis broker/backend
-- PostgreSQL and Elasticsearch connection setup
-- React + TypeScript + Vite frontend scaffold
-- Tailwind CSS, React Query, React Router, Axios, and Framer Motion configured
-- Docker Compose for local infrastructure
+- Phase 1: monorepo scaffold, FastAPI backend, React frontend, Docker Compose, Redis, PostgreSQL, and Elasticsearch wiring
+- Phase 2: SQLAlchemy models for users, articles, companies, bookmarks, reactions, and notifications plus Alembic migrations
+- Phase 3: scheduled ingestion pipeline for NewsAPI and RSS sources with deduplication, GPT-based classification, region extraction, company extraction, and Celery Beat
+- Phase 4: article enrichment worker for summaries, deep dives, sentiment, impact score, `why_it_matters`, source quality scoring, Google TTS audio generation, and Elasticsearch indexing
 
 ## Quick Start
 
@@ -49,6 +47,7 @@ This currently starts:
 
 - `api`
 - `worker`
+- `beat`
 - `postgres`
 - `redis`
 - `elasticsearch`
@@ -61,6 +60,12 @@ This currently starts:
 cd backend
 pip install -e .
 uvicorn app.main:app --reload
+```
+
+Apply migrations after the database is running:
+
+```bash
+alembic upgrade head
 ```
 
 ### Frontend
@@ -83,6 +88,15 @@ Backend values are defined in `backend/.env.example`:
 - `GOOGLE_TTS_KEY`
 - `JWT_SECRET`
 
+## Backend Capabilities
+
+- Async FastAPI application with Redis, Celery, PostgreSQL, and Elasticsearch integration
+- Scheduled news ingestion every 15 minutes from NewsAPI and curated RSS feeds
+- URL-hash deduplication before insert
+- GPT-4o-mini powered vertical classification, region extraction, and company extraction
+- Enrichment worker for 60-word summaries, deep-dive JSON, sentiment, impact score, and `why_it_matters`
+- Google Cloud Text-to-Speech MP3 generation and local `/media` serving
+
 ## GitHub Setup Checklist
 
 - Create a new GitHub repository
@@ -92,9 +106,6 @@ Backend values are defined in `backend/.env.example`:
 
 ## Next Build Phases
 
-- Phase 2: SQLAlchemy models + Alembic migrations
-- Phase 3: News ingestion pipeline
-- Phase 4: AI summarization and enrichment workers
 - Phase 5: REST API endpoints
 - Phase 6: Frontend product UI
 - Phase 7: Unique platform features
