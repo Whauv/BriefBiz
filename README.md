@@ -196,6 +196,16 @@ cd frontend && npm run build
 docker compose config
 ```
 
+## GitHub Project Files
+
+The repository includes a few collaboration and maintenance files for GitHub:
+
+- `CONTRIBUTING.md` for local setup and pull request expectations
+- `SECURITY.md` for private vulnerability reporting guidance
+- `.github/CODEOWNERS` for default review ownership
+- `.github/workflows/ci.yml` for baseline backend and frontend checks
+- issue templates and a pull request template under `.github/`
+
 ## Next Work
 
 - Harden auth and OAuth flows
