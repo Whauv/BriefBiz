@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     news_api_key: str = Field(alias="NEWS_API_KEY")
     google_tts_key: str = Field(alias="GOOGLE_TTS_KEY")
     jwt_secret: str = Field(alias="JWT_SECRET")
+    sendgrid_api_key: str | None = Field(default=None, alias="SENDGRID_API_KEY")
+    sendgrid_from_email: str | None = Field(default=None, alias="SENDGRID_FROM_EMAIL")
+    app_base_url: str = Field(default="http://localhost:8000", alias="APP_BASE_URL")
     celery_broker_url: str | None = Field(default=None, alias="CELERY_BROKER_URL")
     celery_result_backend: str | None = Field(default=None, alias="CELERY_RESULT_BACKEND")
 
@@ -31,4 +34,3 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
-

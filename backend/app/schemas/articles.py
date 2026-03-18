@@ -24,6 +24,9 @@ class ArticleCardResponse(BaseModel):
     image_url: str | None
     audio_url: str | None
     why_it_matters: str | None
+    topic_cluster: str | None
+    sources_disagree: bool
+    conflict_context: dict[str, Any]
     companies: list[str]
 
 
@@ -40,6 +43,7 @@ class ShareCardResponse(BaseModel):
     sentiment: str
     vertical: str
     image_url: str | None
+    download_url: str | None = None
 
 
 class BookmarkResponse(BaseModel):
@@ -57,4 +61,3 @@ class ReactionResponse(BaseModel):
     user_id: int
     reaction_text: str
     created_at: datetime
-

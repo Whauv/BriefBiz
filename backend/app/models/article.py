@@ -77,6 +77,13 @@ class Article(Base):
     image_url: Mapped[str | None] = mapped_column(Text())
     audio_url: Mapped[str | None] = mapped_column(Text())
     why_it_matters: Mapped[str | None] = mapped_column(String(120))
+    topic_cluster: Mapped[str | None] = mapped_column(String(120), index=True)
+    sources_disagree: Mapped[bool] = mapped_column(default=False, server_default=text("false"))
+    conflict_context: Mapped[dict[str, Any]] = mapped_column(
+        JSONB,
+        default=lambda: {"related_article_ids": [], "perspectives": []},
+        server_default=text("""'{"related_article_ids": [], "perspectives": []}'::jsonb"""),
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),

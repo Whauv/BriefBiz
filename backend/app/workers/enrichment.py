@@ -5,6 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.session import AsyncSessionLocal
 from app.models.article import Article
+from app.services.conflict_detection import ConflictDetectionService
 from app.services.enrichment import ArticleEnrichmentService, source_quality_score
 from app.services.search_index import SearchIndexService
 from app.services.tts import TextToSpeechService
@@ -15,6 +16,7 @@ class ArticleEnrichmentWorker:
         self.enrichment_service = ArticleEnrichmentService()
         self.tts_service = TextToSpeechService()
         self.search_index = SearchIndexService()
+        self.conflict_detection = ConflictDetectionService()
 
     async def process_article(self, article_id: int) -> dict[str, int | str]:
         async with AsyncSessionLocal() as session:
@@ -39,6 +41,7 @@ class ArticleEnrichmentWorker:
                 article_id=article.id,
                 text=enrichment.summary_60w,
             )
+            await self.conflict_detection.assign_topic_and_detect_conflict(session, article)
 
             await session.commit()
             await session.refresh(article)

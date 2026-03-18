@@ -10,6 +10,7 @@ from app.models.article import Article, ArticleVertical
 from app.models.company import ArticleCompany, Company
 from app.schemas.ingestion import SourceArticle
 from app.services.enrichment import source_quality_score
+from app.services.notifications import NotificationService
 from app.utils.hashing import hash_url
 from app.utils.slug import slugify
 
@@ -17,6 +18,7 @@ from app.utils.slug import slugify
 class ArticleIngestionService:
     def __init__(self, session: AsyncSession) -> None:
         self.session = session
+        self.notification_service = NotificationService()
 
     async def article_exists(self, url_hash: str) -> bool:
         query: Select[tuple[int]] = select(Article.id).where(Article.url_hash == url_hash)
@@ -80,6 +82,13 @@ class ArticleIngestionService:
                 )
             companies.append(company)
         return companies
+
+    async def create_follow_notifications(self, article: Article, company_names: list[str]) -> int:
+        return await self.notification_service.create_company_notifications(
+            self.session,
+            article_id=article.id,
+            company_names=company_names,
+        )
 
     async def _create_company(self, name: str, headline: str) -> Company:
         base_slug = slugify(name)

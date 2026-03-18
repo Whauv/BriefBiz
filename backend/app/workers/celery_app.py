@@ -1,4 +1,5 @@
 from celery import Celery
+from celery.schedules import crontab
 
 from app.core.config import get_settings
 
@@ -21,6 +22,10 @@ celery_app.conf.update(
         "ingest-news-every-15-minutes": {
             "task": "briefbiz.ingestion.run",
             "schedule": 15 * 60,
+        },
+        "weekly-digest-sunday-8utc": {
+            "task": "briefbiz.digest.weekly",
+            "schedule": crontab(minute=0, hour=8, day_of_week="sun"),
         },
     },
 )

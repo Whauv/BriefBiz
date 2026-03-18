@@ -38,6 +38,15 @@ export interface Article {
   sector?: string;
   funding_stage?: string;
   sources_disagree?: boolean;
+  conflict_context?: {
+    related_article_ids: number[];
+    perspectives: Array<{
+      article_id: number;
+      source_name: string;
+      sentiment: Sentiment;
+      summary: string | null;
+    }>;
+  };
 }
 
 export interface CompanyProfile {

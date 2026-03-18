@@ -40,6 +40,9 @@ def serialize_article_card(article: Article, companies: list[str]) -> ArticleCar
         image_url=article.image_url,
         audio_url=article.audio_url,
         why_it_matters=article.why_it_matters,
+        topic_cluster=article.topic_cluster,
+        sources_disagree=article.sources_disagree,
+        conflict_context=article.conflict_context,
         companies=companies,
     )
 
@@ -50,4 +53,3 @@ def serialize_article_detail(article: Article, companies: list[str]) -> ArticleD
         raw_content=article.raw_content,
         created_at=article.created_at,
     )
-

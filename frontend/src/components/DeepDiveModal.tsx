@@ -11,6 +11,8 @@ interface DeepDiveModalProps {
 }
 
 export function DeepDiveModal({ article, onClose }: DeepDiveModalProps) {
+  const disagreementPerspectives = article?.conflict_context?.perspectives ?? [];
+
   return (
     <AnimatePresence>
       {article ? (
@@ -84,12 +86,26 @@ export function DeepDiveModal({ article, onClose }: DeepDiveModalProps) {
             {article.sources_disagree ? (
               <section className="mt-4 grid gap-4 rounded-3xl border border-amber-300/20 bg-amber-200/5 p-5 md:grid-cols-2">
                 <Section
-                  title="Bull Case"
-                  body="Bundled AI products can accelerate enterprise adoption and strengthen the platform position of category leaders."
+                  title={
+                    disagreementPerspectives[0]
+                      ? `${disagreementPerspectives[0].source_name} view`
+                      : "Bull Case"
+                  }
+                  body={
+                    disagreementPerspectives[0]?.summary ??
+                    "Bundled AI products can accelerate enterprise adoption and strengthen the platform position of category leaders."
+                  }
                 />
                 <Section
-                  title="Bear Case"
-                  body="Horizontal SaaS vendors may lose pricing power before buyers fully trust the bundled AI stack."
+                  title={
+                    disagreementPerspectives[1]
+                      ? `${disagreementPerspectives[1].source_name} view`
+                      : "Bear Case"
+                  }
+                  body={
+                    disagreementPerspectives[1]?.summary ??
+                    "Horizontal SaaS vendors may lose pricing power before buyers fully trust the bundled AI stack."
+                  }
                 />
               </section>
             ) : null}
@@ -108,6 +124,12 @@ export function DeepDiveModal({ article, onClose }: DeepDiveModalProps) {
               </a>
               <button
                 type="button"
+                onClick={() => {
+                  window.open(
+                    `${import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000"}/articles/${article.id}/share-card/image`,
+                    "_blank",
+                  );
+                }}
                 className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm text-white"
               >
                 <Share2 className="h-4 w-4" />

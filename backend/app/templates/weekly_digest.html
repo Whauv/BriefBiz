@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="en">
+  <body style="margin:0;padding:32px;background:#0f172a;color:#e2e8f0;font-family:Arial,sans-serif;">
+    <div style="max-width:720px;margin:0 auto;">
+      <h1 style="margin-bottom:8px;">BriefBiz Weekly Digest</h1>
+      <p style="margin-top:0;color:#94a3b8;">Top stories for {{ name }} from the last 7 days.</p>
+      {% for article in articles %}
+      <div style="background:#111827;border:1px solid #334155;border-radius:20px;padding:20px;margin-top:16px;">
+        <div style="font-size:12px;letter-spacing:0.12em;text-transform:uppercase;color:#7dd3fc;">{{ article.source_name }}</div>
+        <h2 style="margin-bottom:8px;">{{ article.title }}</h2>
+        <p style="line-height:1.7;color:#cbd5e1;">{{ article.summary_60w or article.why_it_matters or "" }}</p>
+        <a href="{{ article.url }}" style="display:inline-block;margin-top:8px;color:#f8fafc;">Read full story</a>
+      </div>
+      {% endfor %}
+    </div>
+  </body>
+</html>

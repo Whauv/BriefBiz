@@ -58,6 +58,7 @@ class NewsIngestionPipeline:
                 source_article.raw_content,
             )
             await ingestion_service.upsert_companies(article, extraction.companies)
+            await ingestion_service.create_follow_notifications(article, extraction.companies)
             await ingestion_service.commit()
 
         article_id = article.id

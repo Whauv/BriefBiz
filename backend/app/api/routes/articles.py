@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import FileResponse
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -16,6 +17,7 @@ from app.schemas.articles import (
     ReactionResponse,
     ShareCardResponse,
 )
+from app.services.share_cards import ShareCardService
 from app.services.serializers import get_article_company_names, serialize_article_detail
 
 router = APIRouter(prefix="/articles", tags=["articles"])
@@ -47,7 +49,15 @@ async def share_card(article_id: int, session: AsyncSession = Depends(get_db_ses
         sentiment=article.sentiment.value,
         vertical=article.vertical.value,
         image_url=article.image_url,
+        download_url=f"/articles/{article.id}/share-card/image",
     )
+
+
+@router.get("/{article_id}/share-card/image")
+async def share_card_image(article_id: int, session: AsyncSession = Depends(get_db_session)) -> FileResponse:
+    article = await _get_article_or_404(session, article_id)
+    card_path = ShareCardService().generate_card(article)
+    return FileResponse(card_path, media_type="image/png", filename=f"briefbiz-{article.id}.png")
 
 
 @router.post("/{article_id}/bookmark", response_model=BookmarkResponse)
@@ -106,4 +116,3 @@ async def create_reaction(
         reaction_text=reaction.reaction_text,
         created_at=reaction.created_at,
     )
-
