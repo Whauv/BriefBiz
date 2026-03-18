@@ -1,0 +1,60 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_AR_HOSTNAME}/${PROJECT_ID}/${_REPOSITORY}/briefbiz-api:${SHORT_SHA}
+      - ./backend
+
+  - name: gcr.io/cloud-builders/docker
+    args:
+      - build
+      - -t
+      - ${_AR_HOSTNAME}/${PROJECT_ID}/${_REPOSITORY}/briefbiz-web:${SHORT_SHA}
+      - ./frontend
+
+  - name: gcr.io/cloud-builders/docker
+    args: ["push", "${_AR_HOSTNAME}/${PROJECT_ID}/${_REPOSITORY}/briefbiz-api:${SHORT_SHA}"]
+
+  - name: gcr.io/cloud-builders/docker
+    args: ["push", "${_AR_HOSTNAME}/${PROJECT_ID}/${_REPOSITORY}/briefbiz-web:${SHORT_SHA}"]
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_API_SERVICE}
+      - --image=${_AR_HOSTNAME}/${PROJECT_ID}/${_REPOSITORY}/briefbiz-api:${SHORT_SHA}
+      - --region=${_REGION}
+      - --platform=managed
+      - --allow-unauthenticated
+      - --port=8000
+
+  - name: gcr.io/google.com/cloudsdktool/cloud-sdk
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - ${_WEB_SERVICE}
+      - --image=${_AR_HOSTNAME}/${PROJECT_ID}/${_REPOSITORY}/briefbiz-web:${SHORT_SHA}
+      - --region=${_REGION}
+      - --platform=managed
+      - --allow-unauthenticated
+      - --port=80
+      - --set-env-vars=API_UPSTREAM=${_API_UPSTREAM}
+
+images:
+  - ${_AR_HOSTNAME}/${PROJECT_ID}/${_REPOSITORY}/briefbiz-api:${SHORT_SHA}
+  - ${_AR_HOSTNAME}/${PROJECT_ID}/${_REPOSITORY}/briefbiz-web:${SHORT_SHA}
+
+substitutions:
+  _AR_HOSTNAME: us-docker.pkg.dev
+  _REGION: us-central1
+  _REPOSITORY: briefbiz
+  _API_SERVICE: briefbiz-api
+  _WEB_SERVICE: briefbiz-web
+  _API_UPSTREAM: https://briefbiz-api-REPLACE_ME.a.run.app
+
+options:
+  logging: CLOUD_LOGGING_ONLY
