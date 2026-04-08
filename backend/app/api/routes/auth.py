@@ -5,6 +5,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
+from app.core.rate_limit import auth_rate_limiter
 from app.db.session import get_db_session
 from app.models.user import User
 from app.schemas.auth import (
@@ -24,11 +25,13 @@ async def register(
     payload: RegisterRequest,
     session: AsyncSession = Depends(get_db_session),
 ) -> TokenResponse:
-    existing = await session.execute(select(User).where(User.email == payload.email))
+    auth_rate_limiter.check(f"register:{payload.email}")
+    normalized_email = payload.email.lower()
+    existing = await session.execute(select(User).where(User.email == normalized_email))
     if existing.scalar_one_or_none() is not None:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email already registered")
 
-    user = User(email=payload.email, password_hash=hash_password(payload.password), name=payload.name)
+    user = User(email=normalized_email, password_hash=hash_password(payload.password), name=payload.name)
     session.add(user)
     await session.commit()
     await session.refresh(user)
@@ -42,7 +45,8 @@ async def login(
     payload: LoginRequest,
     session: AsyncSession = Depends(get_db_session),
 ) -> TokenResponse:
-    result = await session.execute(select(User).where(User.email == payload.email))
+    auth_rate_limiter.check(f"login:{payload.email}")
+    result = await session.execute(select(User).where(User.email == payload.email.lower()))
     user = result.scalar_one_or_none()
     if user is None or not verify_password(payload.password, user.password_hash):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
@@ -70,4 +74,3 @@ async def update_preferences(
     await session.commit()
     await session.refresh(current_user)
     return UserResponse.model_validate(current_user)
-

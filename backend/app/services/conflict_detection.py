@@ -5,6 +5,7 @@ from math import sqrt
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import get_settings
 from app.models.article import Article, ArticleSentiment
 from app.services.openai_client import get_openai_client
 from app.utils.slug import slugify
@@ -81,14 +82,17 @@ class ConflictDetectionService:
             article.conflict_context = {"related_article_ids": [best_match.id], "perspectives": []}
 
     async def _embedding_for(self, article: Article) -> list[float]:
+        settings = get_settings()
         if article.summary_60w:
             text = f"{article.title}\n{article.summary_60w}"
         else:
             text = f"{article.title}\n{article.raw_content or ''}"
 
         try:
+            if not settings.effective_embedding_model:
+                raise RuntimeError("No embedding model configured.")
             client = get_openai_client()
-            response = await client.embeddings.create(model="text-embedding-3-small", input=text[:4000])
+            response = await client.embeddings.create(model=settings.effective_embedding_model, input=text[:4000])
             return response.data[0].embedding
         except Exception:
             # lightweight lexical fallback for offline/dev use

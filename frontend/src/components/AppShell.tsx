@@ -20,7 +20,7 @@ const tabs = [
 
 export function AppShell({ children }: AppShellProps) {
   const navigate = useNavigate();
-  const { notifications } = useAppStore();
+  const { currentUser, isAuthenticated, notifications } = useAppStore();
   const [search, setSearch] = useState("");
   const unreadCount = notifications.filter((item) => !item.read).length;
 
@@ -51,15 +51,26 @@ export function AppShell({ children }: AppShellProps) {
             type="button"
             onClick={() => navigate("/profile")}
             className="relative ml-auto inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/10 bg-white/5"
+            aria-label={isAuthenticated ? "Open profile and notifications" : "Open sign in"}
           >
             <Bell className="h-5 w-5" />
-            {unreadCount > 0 ? (
+            {isAuthenticated && unreadCount > 0 ? (
               <span className="absolute -right-1 -top-1 inline-flex min-h-5 min-w-5 items-center justify-center rounded-full bg-amber-300 px-1 text-[10px] font-bold text-slate-950">
                 {unreadCount}
               </span>
             ) : null}
           </button>
-          <div className="hidden h-10 w-10 rounded-full bg-gradient-to-br from-emerald-300 to-sky-400 md:block" />
+          <div className="hidden min-w-0 items-center gap-3 md:flex">
+            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-emerald-300 to-sky-400" />
+            <div className="min-w-0">
+              <div className="truncate text-sm font-semibold text-white">
+                {currentUser?.name ?? "Guest"}
+              </div>
+              <div className="truncate text-xs text-slate-400">
+                {currentUser?.email ?? "Sign in to personalize your feed"}
+              </div>
+            </div>
+          </div>
         </div>
       </header>
 

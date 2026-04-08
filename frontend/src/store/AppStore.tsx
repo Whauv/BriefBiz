@@ -7,21 +7,29 @@ import {
   type ReactNode,
 } from "react";
 
-import type { NotificationItem, Preferences } from "../types";
+import type { AuthUser, NotificationItem, Preferences } from "../types";
 import { defaultPreferences, mockNotifications } from "../utils/mockData";
+import { AUTH_TOKEN_KEY } from "../utils/query";
 
 interface AppStoreValue {
   bookmarks: number[];
   dismissed: number[];
   preferences: Preferences;
   notifications: NotificationItem[];
+  authToken: string | null;
+  currentUser: AuthUser | null;
+  isAuthenticated: boolean;
   toggleBookmark: (articleId: number) => void;
   dismissArticle: (articleId: number) => void;
   restoreDismissed: () => void;
   markNotificationsRead: () => void;
+  setNotifications: (items: NotificationItem[]) => void;
   updatePreferences: (next: Partial<Preferences>) => void;
   followCompany: (name: string) => void;
   followInvestor: (name: string) => void;
+  setSession: (token: string, user: AuthUser) => void;
+  clearSession: () => void;
+  setCurrentUser: (user: AuthUser | null) => void;
 }
 
 const AppStoreContext = createContext<AppStoreValue | null>(null);
@@ -30,6 +38,7 @@ const BOOKMARKS_KEY = "briefbiz-bookmarks";
 const DISMISSED_KEY = "briefbiz-dismissed";
 const PREFERENCES_KEY = "briefbiz-preferences";
 const NOTIFICATIONS_KEY = "briefbiz-notifications";
+const CURRENT_USER_KEY = "briefbiz-current-user";
 
 function readStorage<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") {
@@ -59,6 +68,8 @@ export function AppStoreProvider({ children }: AppStoreProviderProps) {
   const [notifications, setNotifications] = useState<NotificationItem[]>(() =>
     readStorage(NOTIFICATIONS_KEY, mockNotifications),
   );
+  const [authToken, setAuthToken] = useState<string | null>(() => readStorage(AUTH_TOKEN_KEY, null));
+  const [currentUser, setCurrentUserState] = useState<AuthUser | null>(() => readStorage(CURRENT_USER_KEY, null));
 
   useEffect(() => {
     window.localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
@@ -76,12 +87,31 @@ export function AppStoreProvider({ children }: AppStoreProviderProps) {
     window.localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
   }, [notifications]);
 
+  useEffect(() => {
+    if (authToken) {
+      window.localStorage.setItem(AUTH_TOKEN_KEY, JSON.stringify(authToken));
+    } else {
+      window.localStorage.removeItem(AUTH_TOKEN_KEY);
+    }
+  }, [authToken]);
+
+  useEffect(() => {
+    if (currentUser) {
+      window.localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
+    } else {
+      window.localStorage.removeItem(CURRENT_USER_KEY);
+    }
+  }, [currentUser]);
+
   const value = useMemo<AppStoreValue>(
     () => ({
       bookmarks,
       dismissed,
       preferences,
       notifications,
+      authToken,
+      currentUser,
+      isAuthenticated: Boolean(authToken && currentUser),
       toggleBookmark: (articleId) => {
         setBookmarks((current) =>
           current.includes(articleId) ? current.filter((id) => id !== articleId) : [...current, articleId],
@@ -94,8 +124,15 @@ export function AppStoreProvider({ children }: AppStoreProviderProps) {
       markNotificationsRead: () => {
         setNotifications((current) => current.map((item) => ({ ...item, read: true })));
       },
+      setNotifications,
       updatePreferences: (next) => {
-        setPreferences((current) => ({ ...current, ...next }));
+        setPreferences((current) => {
+          const merged = { ...current, ...next };
+          if (currentUser) {
+            setCurrentUserState({ ...currentUser, preferences: merged });
+          }
+          return merged;
+        });
       },
       followCompany: (name) => {
         const normalized = name.trim();
@@ -117,8 +154,25 @@ export function AppStoreProvider({ children }: AppStoreProviderProps) {
             : [...current.followed_investors, normalized],
         }));
       },
+      setSession: (token, user) => {
+        setAuthToken(token);
+        setCurrentUserState(user);
+        setPreferences(user.preferences);
+      },
+      clearSession: () => {
+        setAuthToken(null);
+        setCurrentUserState(null);
+        setPreferences(defaultPreferences);
+        setNotifications(mockNotifications);
+      },
+      setCurrentUser: (user) => {
+        setCurrentUserState(user);
+        if (user) {
+          setPreferences(user.preferences);
+        }
+      },
     }),
-    [bookmarks, dismissed, notifications, preferences],
+    [authToken, bookmarks, currentUser, dismissed, notifications, preferences],
   );
 
   return <AppStoreContext.Provider value={value}>{children}</AppStoreContext.Provider>;

@@ -15,7 +15,7 @@ class TextToSpeechService:
         self.media_root.mkdir(parents=True, exist_ok=True)
 
     async def synthesize_summary(self, *, article_id: int, text: str) -> str | None:
-        if not text.strip():
+        if not text.strip() or not self.settings.google_tts_key:
             return None
 
         endpoint = f"https://texttospeech.googleapis.com/v1/text:synthesize?key={self.settings.google_tts_key}"
@@ -39,4 +39,3 @@ class TextToSpeechService:
         file_path = self.media_root / f"article-{article_id}.mp3"
         file_path.write_bytes(base64.b64decode(audio_content))
         return f"/media/audio/{file_path.name}"
-

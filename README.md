@@ -8,17 +8,17 @@ BriefBiz is an AI-powered business and startup news platform inspired by short-f
 - Workers: Celery, Redis
 - Search: Elasticsearch
 - Frontend: React, TypeScript, Vite, Tailwind CSS, Framer Motion
-- AI: OpenAI GPT-4o-mini, `text-embedding-3-small`
-- Audio: Google Cloud Text-to-Speech
-- Email: SendGrid
+- AI: OpenRouter or OpenAI-compatible Responses API, with lexical fallback for embeddings
+- Audio: browser speech synthesis by default, optional Google Cloud Text-to-Speech
+- Email: Resend or SendGrid
 - Deployment: Docker, Docker Compose, Nginx, Google Cloud Run, Cloud Build
 
 ## What Is Implemented
 
 - Phase 1: monorepo scaffold, backend/frontend bootstrapping, Docker Compose foundations
 - Phase 2: SQLAlchemy models plus Alembic migrations
-- Phase 3: News ingestion pipeline for NewsAPI and curated RSS feeds
-- Phase 4: summarization and enrichment workers with search indexing and TTS
+- Phase 3: News ingestion pipeline for curated RSS feeds plus optional NewsAPI
+- Phase 4: summarization and enrichment workers with search indexing and optional TTS
 - Phase 5: REST API endpoints for auth, feed, articles, companies, search, and notifications
 - Phase 6: core frontend UI including swipe cards, search, profile, bookmarks, funding radar, and company pages
 - Phase 7: shareable story cards, disagreement detection, weekly digest plumbing, and company-follow notifications
@@ -58,18 +58,34 @@ Required backend variables:
 - `DATABASE_URL`
 - `REDIS_URL`
 - `ELASTICSEARCH_URL`
-- `OPENAI_API_KEY`
-- `NEWS_API_KEY`
-- `GOOGLE_TTS_KEY`
 - `JWT_SECRET`
+
+Recommended free-tier AI variable:
+
+- `OPENROUTER_API_KEY`
 
 Optional but used by later phases:
 
+- `OPENAI_API_KEY`
+- `LLM_BASE_URL`
+- `LLM_MODEL`
+- `EMBEDDING_MODEL`
+- `NEWS_API_KEY`
+- `GOOGLE_TTS_KEY`
+- `RESEND_API_KEY`
+- `RESEND_FROM_EMAIL`
 - `SENDGRID_API_KEY`
 - `SENDGRID_FROM_EMAIL`
 - `APP_BASE_URL`
 - `CELERY_BROKER_URL`
 - `CELERY_RESULT_BACKEND`
+
+Free-tier-friendly default setup:
+
+- Use RSS feeds only and leave `NEWS_API_KEY` empty.
+- Use browser audio and leave `GOOGLE_TTS_KEY` empty.
+- Use `OPENROUTER_API_KEY` with `LLM_MODEL=openrouter/free` for summarization and classification.
+- Use `RESEND_API_KEY` only if you want weekly digest email enabled.
 
 ### Run With Docker Compose
 
@@ -164,11 +180,11 @@ flowchart LR
     W --> P
     W --> E
     W --> C
-    W --> O["OpenAI APIs"]
-    W --> T["Google TTS"]
-    W --> S["SendGrid"]
+    W --> O["OpenRouter or OpenAI-compatible LLM API"]
+    W --> T["Optional Google TTS"]
+    W --> S["Optional Resend or SendGrid"]
 
-    F["NewsAPI + RSS Sources"] --> W
+    F["RSS Sources + Optional NewsAPI"] --> W
 ```
 
 ## Key User Flows
@@ -194,6 +210,12 @@ Recommended checks:
 python -m compileall backend/app backend/alembic
 cd frontend && npm run build
 docker compose config
+```
+
+Backend tests, using the containerized runner when local Python is unreliable:
+
+```bash
+docker compose --profile test run --rm api-test
 ```
 
 ## GitHub Project Files

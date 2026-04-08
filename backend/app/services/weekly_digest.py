@@ -51,6 +51,8 @@ class WeeklyDigestService:
         return template.render(name=name, articles=articles, base_url=self.settings.app_base_url)
 
     async def _send_email(self, email: str, html: str) -> bool:
+        if self.settings.resend_api_key and self.settings.resend_from_email:
+            return await self._send_with_resend(email, html)
         if not self.settings.sendgrid_api_key or not self.settings.sendgrid_from_email:
             return False
         payload = {
@@ -64,6 +66,28 @@ class WeeklyDigestService:
                 response = await client.post(
                     "https://api.sendgrid.com/v3/mail/send",
                     headers={"Authorization": f"Bearer {self.settings.sendgrid_api_key}"},
+                    json=payload,
+                )
+                response.raise_for_status()
+            return True
+        except Exception:
+            return False
+
+    async def _send_with_resend(self, email: str, html: str) -> bool:
+        payload = {
+            "from": f"BriefBiz <{self.settings.resend_from_email}>",
+            "to": [email],
+            "subject": "Your BriefBiz Weekly Digest",
+            "html": html,
+        }
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                response = await client.post(
+                    "https://api.resend.com/emails",
+                    headers={
+                        "Authorization": f"Bearer {self.settings.resend_api_key}",
+                        "Content-Type": "application/json",
+                    },
                     json=payload,
                 )
                 response.raise_for_status()

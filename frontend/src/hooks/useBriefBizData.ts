@@ -3,18 +3,24 @@ import { useQuery } from "@tanstack/react-query";
 import type { Article, CompanyProfile, NotificationItem } from "../types";
 import { mockArticles, mockCompanies, mockNotifications } from "../utils/mockData";
 import { apiClient } from "../utils/api";
+import { isMockFallbackEnabled } from "../utils/query";
+import { useAppStore } from "../store/AppStore";
 
 async function withFallback<T>(request: () => Promise<T>, fallback: T): Promise<T> {
   try {
     return await request();
   } catch {
-    return fallback;
+    if (isMockFallbackEnabled()) {
+      return fallback;
+    }
+    throw new Error("Unable to load BriefBiz data.");
   }
 }
 
 export function useFeedData() {
   return useQuery({
     queryKey: ["feed"],
+    staleTime: 60_000,
     queryFn: () =>
       withFallback(
         async () => {
@@ -29,6 +35,7 @@ export function useFeedData() {
 export function useFundingRadarData() {
   return useQuery({
     queryKey: ["funding-radar"],
+    staleTime: 60_000,
     queryFn: () =>
       withFallback(
         async () => {
@@ -44,6 +51,7 @@ export function useCompanyData(slug: string | undefined) {
   return useQuery({
     queryKey: ["company", slug],
     enabled: Boolean(slug),
+    staleTime: 60_000,
     queryFn: () =>
       withFallback(
         async () => {
@@ -59,6 +67,7 @@ export function useSearchData(query: string) {
   return useQuery({
     queryKey: ["search", query],
     enabled: query.trim().length > 0,
+    staleTime: 15_000,
     queryFn: () =>
       withFallback(
         async () => {
@@ -82,12 +91,16 @@ export function useSearchData(query: string) {
 }
 
 export function useNotificationData() {
+  const { isAuthenticated, setNotifications } = useAppStore();
   return useQuery({
     queryKey: ["notifications"],
+    enabled: isAuthenticated,
+    staleTime: 30_000,
     queryFn: () =>
       withFallback(
         async () => {
           const { data } = await apiClient.get<NotificationItem[]>("/notifications");
+          setNotifications(data);
           return data;
         },
         mockNotifications,

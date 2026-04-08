@@ -110,6 +110,22 @@ services:
       timeout: 5s
       retries: 5
 
+  api-test:
+    build:
+      context: ./backend
+    command: python -m pytest
+    env_file:
+      - ./backend/.env
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    profiles:
+      - test
+
 volumes:
   postgres_data:
   redis_data:
