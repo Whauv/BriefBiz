@@ -22,18 +22,31 @@ def verify_password(password: str, password_hash: str) -> bool:
 
 def create_access_token(subject: str, expires_delta: timedelta | None = None) -> str:
     settings = get_settings()
-    expire_at = datetime.now(UTC) + (expires_delta or timedelta(days=7))
-    payload = {"sub": subject, "exp": expire_at}
+    expire_at = datetime.now(UTC) + (
+        expires_delta or timedelta(minutes=settings.access_token_expire_minutes)
+    )
+    payload = {
+        "sub": subject,
+        "exp": expire_at,
+        "iss": settings.jwt_issuer,
+        "aud": settings.jwt_audience,
+    }
     return jwt.encode(payload, settings.jwt_secret, algorithm="HS256")
 
 
 def decode_access_token(token: str) -> dict[str, Any]:
     settings = get_settings()
     try:
-        return jwt.decode(token, settings.jwt_secret, algorithms=["HS256"])
+        return jwt.decode(
+            token,
+            settings.jwt_secret,
+            algorithms=["HS256"],
+            issuer=settings.jwt_issuer,
+            audience=settings.jwt_audience,
+        )
     except jwt.PyJWTError as exc:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authentication token",
+            detail="Invalid or expired authentication token",
+            headers={"WWW-Authenticate": "Bearer"},
         ) from exc
-

@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ArticleCardResponse(BaseModel):
@@ -52,7 +52,7 @@ class BookmarkResponse(BaseModel):
 
 
 class ReactionRequest(BaseModel):
-    reaction_text: str
+    reaction_text: str = Field(min_length=1, max_length=100)
 
 
 class ReactionResponse(BaseModel):

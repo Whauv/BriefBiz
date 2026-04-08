@@ -36,8 +36,12 @@ async def search(
         if article_ids:
             result = await session.execute(select(Article).where(Article.id.in_(article_ids)))
             articles = list(result.scalars().unique().all())
-            company_map = await get_article_company_names(session, [article.id for article in articles])
-            article_results = [serialize_article_card(article, company_map.get(article.id, [])) for article in articles]
+            articles_by_id = {article.id: article for article in articles}
+            ordered_articles = [articles_by_id[article_id] for article_id in article_ids if article_id in articles_by_id]
+            company_map = await get_article_company_names(session, [article.id for article in ordered_articles])
+            article_results = [
+                serialize_article_card(article, company_map.get(article.id, [])) for article in ordered_articles
+            ]
     except Exception:
         result = await session.execute(
             select(Article)

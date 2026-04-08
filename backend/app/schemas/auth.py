@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
 
 class UserPreferencesPayload(BaseModel):
@@ -28,10 +28,25 @@ class RegisterRequest(BaseModel):
     password: str = Field(min_length=8, max_length=128)
     name: str = Field(min_length=1, max_length=255)
 
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: EmailStr) -> EmailStr:
+        return EmailStr(value.strip().lower())
+
+    @field_validator("name")
+    @classmethod
+    def normalize_name(cls, value: str) -> str:
+        return " ".join(value.split())
+
 
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str = Field(min_length=8, max_length=128)
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: EmailStr) -> EmailStr:
+        return EmailStr(value.strip().lower())
 
 
 class TokenResponse(BaseModel):
@@ -46,3 +61,20 @@ class UpdatePreferencesRequest(BaseModel):
     followed_companies: list[str] | None = None
     followed_investors: list[str] | None = None
 
+    @field_validator("sectors", "regions", "followed_companies", "followed_investors")
+    @classmethod
+    def normalize_preference_values(cls, value: list[str] | None) -> list[str] | None:
+        if value is None:
+            return None
+        normalized: list[str] = []
+        seen: set[str] = set()
+        for item in value:
+            cleaned = " ".join(item.split()).strip()
+            if not cleaned:
+                continue
+            dedupe_key = cleaned.casefold()
+            if dedupe_key in seen:
+                continue
+            seen.add(dedupe_key)
+            normalized.append(cleaned)
+        return normalized[:50]

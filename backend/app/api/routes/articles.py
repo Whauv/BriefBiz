@@ -98,13 +98,10 @@ async def create_reaction(
     session: AsyncSession = Depends(get_db_session),
 ) -> ReactionResponse:
     await _get_article_or_404(session, article_id)
-    if len(payload.reaction_text) > 100:
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail="Reaction too long")
-
     reaction = FounderReaction(
         article_id=article_id,
         user_id=current_user.id,
-        reaction_text=payload.reaction_text,
+        reaction_text=payload.reaction_text.strip(),
     )
     session.add(reaction)
     await session.commit()

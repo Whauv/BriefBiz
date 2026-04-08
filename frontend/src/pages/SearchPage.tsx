@@ -1,13 +1,15 @@
 import { Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
+import { getApiErrorMessage } from "../utils/api";
 import { useSearchData } from "../hooks/useBriefBizData";
 
 export function SearchPage() {
   const [params, setParams] = useSearchParams();
   const [query, setQuery] = useState(params.get("q") ?? "");
-  const { data, isFetching } = useSearchData(query);
+  const deferredQuery = useDeferredValue(query);
+  const { data, isFetching, error } = useSearchData(deferredQuery);
 
   useEffect(() => {
     setParams(query ? { q: query } : {}, { replace: true });
@@ -33,11 +35,16 @@ export function SearchPage() {
       </section>
 
       {isFetching ? <div className="text-slate-300">Searching...</div> : null}
+      {error ? <div className="text-rose-200">{getApiErrorMessage(error, "Search is unavailable right now.")}</div> : null}
+      {!query.trim() ? <div className="text-slate-400">Start typing to search articles and companies.</div> : null}
 
       <section className="grid gap-6 lg:grid-cols-2">
         <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
           <div className="text-xs uppercase tracking-[0.3em] text-slate-400">Articles</div>
           <div className="mt-4 space-y-4">
+            {query.trim() && !isFetching && !error && data?.articles.length === 0 ? (
+              <p className="text-sm text-slate-400">No matching articles found.</p>
+            ) : null}
             {data?.articles.map((article) => (
               <article key={article.id} className="rounded-3xl border border-white/10 bg-slate-950/50 p-4">
                 <div className="text-sm text-slate-400">{article.source_name}</div>
@@ -51,6 +58,9 @@ export function SearchPage() {
         <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
           <div className="text-xs uppercase tracking-[0.3em] text-slate-400">Companies</div>
           <div className="mt-4 space-y-4">
+            {query.trim() && !isFetching && !error && data?.companies.length === 0 ? (
+              <p className="text-sm text-slate-400">No matching companies found.</p>
+            ) : null}
             {data?.companies.map((company) => (
               <Link
                 key={company.slug}

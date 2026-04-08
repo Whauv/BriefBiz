@@ -78,3 +78,17 @@ export interface Preferences {
   followed_companies: string[];
   followed_investors: string[];
 }
+
+export interface AuthUser {
+  id: number;
+  email: string;
+  name: string;
+  preferences: Preferences;
+  created_at: string;
+}
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+  user: AuthUser;
+}

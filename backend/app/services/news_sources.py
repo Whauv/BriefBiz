@@ -26,6 +26,8 @@ class NewsSourceService:
         self.settings = get_settings()
 
     async def fetch_newsapi_articles(self) -> list[SourceArticle]:
+        if not self.settings.news_api_key:
+            return []
         headers = {"X-Api-Key": self.settings.news_api_key}
         async with httpx.AsyncClient(timeout=30.0) as client:
             responses = await asyncio.gather(
