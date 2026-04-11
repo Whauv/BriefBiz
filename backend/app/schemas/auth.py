@@ -30,8 +30,8 @@ class RegisterRequest(BaseModel):
 
     @field_validator("email")
     @classmethod
-    def normalize_email(cls, value: EmailStr) -> EmailStr:
-        return EmailStr(value.strip().lower())
+    def normalize_email(cls, value: EmailStr) -> str:
+        return value.strip().lower()
 
     @field_validator("name")
     @classmethod
@@ -45,8 +45,8 @@ class LoginRequest(BaseModel):
 
     @field_validator("email")
     @classmethod
-    def normalize_email(cls, value: EmailStr) -> EmailStr:
-        return EmailStr(value.strip().lower())
+    def normalize_email(cls, value: EmailStr) -> str:
+        return value.strip().lower()
 
 
 class TokenResponse(BaseModel):

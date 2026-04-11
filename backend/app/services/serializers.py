@@ -59,5 +59,5 @@ def serialize_article_detail(article: Article, companies: list[str]) -> ArticleD
     return ArticleDetailResponse(
         **serialize_article_card(article, companies).model_dump(),
         raw_content=article.raw_content,
-        created_at=article.created_at,
+        created_at=article.created_at or article.published_at,
     )
