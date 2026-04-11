@@ -6,7 +6,7 @@ from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
-from app.models.article import Article, ArticleSentiment
+from app.models.article import Article
 from app.services.openai_client import get_openai_client
 from app.utils.slug import slugify
 

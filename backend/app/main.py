@@ -20,7 +20,7 @@ from app.services.redis import close_redis
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     configure_logging()
-    settings = get_settings()
+    get_settings()
     try:
         yield
     finally:
