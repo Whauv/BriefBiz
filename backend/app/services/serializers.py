@@ -24,6 +24,14 @@ async def get_article_company_names(session: AsyncSession, article_ids: list[int
 
 
 def serialize_article_card(article: Article, companies: list[str]) -> ArticleCardResponse:
+    deep_dive = article.deep_dive or {
+        "what_happened": "",
+        "key_players": [],
+        "market_impact": "",
+        "whats_next": "",
+    }
+    conflict_context = article.conflict_context or {"related_article_ids": [], "perspectives": []}
+
     return ArticleCardResponse(
         id=article.id,
         title=article.title,
@@ -32,7 +40,7 @@ def serialize_article_card(article: Article, companies: list[str]) -> ArticleCar
         source_quality_score=article.source_quality_score,
         published_at=article.published_at,
         summary_60w=article.summary_60w,
-        deep_dive=article.deep_dive,
+        deep_dive=deep_dive,
         sentiment=article.sentiment.value,
         impact_score=article.impact_score,
         vertical=article.vertical.value,
@@ -41,8 +49,8 @@ def serialize_article_card(article: Article, companies: list[str]) -> ArticleCar
         audio_url=article.audio_url,
         why_it_matters=article.why_it_matters,
         topic_cluster=article.topic_cluster,
-        sources_disagree=article.sources_disagree,
-        conflict_context=article.conflict_context,
+        sources_disagree=bool(article.sources_disagree),
+        conflict_context=conflict_context,
         companies=companies,
     )
 
@@ -51,5 +59,5 @@ def serialize_article_detail(article: Article, companies: list[str]) -> ArticleD
     return ArticleDetailResponse(
         **serialize_article_card(article, companies).model_dump(),
         raw_content=article.raw_content,
-        created_at=article.created_at,
+        created_at=article.created_at or article.published_at,
     )

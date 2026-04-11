@@ -5,6 +5,7 @@ __pycache__/
 .ruff_cache/
 .coverage
 htmlcov/
+coverage/
 dist/
 build/
 *.tsbuildinfo
@@ -14,8 +15,15 @@ node_modules/
 *.pyo
 *.pyd
 *.sqlite3
+*.pkl
+data/
 .env
 .env.local
 .env.*.local
+backend/.env
+frontend/dist/
+frontend/node_modules/
+frontend/.vite/
+**/__pycache__/
 .idea/
 .vscode/

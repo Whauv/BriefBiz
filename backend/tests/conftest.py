@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator
 
 import pytest
 from httpx import ASGITransport, AsyncClient
@@ -52,4 +52,3 @@ class ExecuteResult:
 @pytest.fixture
 def execute_result() -> type[ExecuteResult]:
     return ExecuteResult
-
