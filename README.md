@@ -1,28 +1,57 @@
 # BriefBiz
 
-BriefBiz is an AI-powered business and startup news platform inspired by short-form news apps, rebuilt for global business, venture, startup, and market-moving stories.
+BriefBiz is an AI-powered business and startup news platform focused on global markets, startups, venture activity, funding, layoffs, regulation, and company intelligence. It combines a FastAPI backend, Celery ingestion/enrichment workers, Elasticsearch-backed search, and a React frontend optimized for short-form news consumption.
+
+## What The Repo Contains
+
+- `backend/`: FastAPI API, SQLAlchemy models, Alembic migrations, Celery workers, ingestion and enrichment services
+- `frontend/`: React + TypeScript + Vite application, Tailwind styling, Framer Motion interactions, Nginx frontend container
+- `docker-compose.yml`: local full-stack orchestration
+- `cloudbuild.yaml`: Google Cloud Build / Cloud Run deployment pipeline
+
+## Core Features
+
+- AI-generated article summaries and deep dives
+- Business/startup news ingestion from RSS and optional NewsAPI
+- Article enrichment for companies, regions, verticals, sentiment, and impact
+- Shareable story cards
+- Search across articles and companies
+- Bookmarks, notifications, and profile preferences
+- Weekly digest email plumbing
+- Audio playback with browser speech by default and optional Google TTS
 
 ## Stack
 
-- Backend: FastAPI, SQLAlchemy async ORM, PostgreSQL
-- Workers: Celery, Redis
-- Search: Elasticsearch
-- Frontend: React, TypeScript, Vite, Tailwind CSS, Framer Motion
-- AI: OpenRouter or OpenAI-compatible Responses API, with lexical fallback for embeddings
-- Audio: browser speech synthesis by default, optional Google Cloud Text-to-Speech
-- Email: Resend or SendGrid
-- Deployment: Docker, Docker Compose, Nginx, Google Cloud Run, Cloud Build
+### Backend
 
-## What Is Implemented
+- Python 3.11+
+- FastAPI
+- SQLAlchemy async ORM
+- Alembic
+- Celery
+- Redis
+- PostgreSQL
+- Elasticsearch
+- Pydantic v2
 
-- Phase 1: monorepo scaffold, backend/frontend bootstrapping, Docker Compose foundations
-- Phase 2: SQLAlchemy models plus Alembic migrations
-- Phase 3: News ingestion pipeline for curated RSS feeds plus optional NewsAPI
-- Phase 4: summarization and enrichment workers with search indexing and optional TTS
-- Phase 5: REST API endpoints for auth, feed, articles, companies, search, and notifications
-- Phase 6: core frontend UI including swipe cards, search, profile, bookmarks, funding radar, and company pages
-- Phase 7: shareable story cards, disagreement detection, weekly digest plumbing, and company-follow notifications
-- Phase 8: production packaging with Dockerfiles, Nginx reverse proxy, Cloud Build config, and deployment docs
+### Frontend
+
+- React 18
+- TypeScript
+- Vite
+- Tailwind CSS
+- Framer Motion
+- React Query
+- React Router
+- Axios
+
+### Deployment
+
+- Docker
+- Docker Compose
+- Nginx
+- Google Cloud Build
+- Google Cloud Run
 
 ## Repository Layout
 
@@ -31,40 +60,39 @@ BriefBiz/
 |- backend/
 |  |- app/
 |  |- alembic/
-|  `- Dockerfile
+|  |- tests/
+|  |- Dockerfile
+|  |- pyproject.toml
+|  `- README.md
 |- frontend/
 |  |- src/
 |  |- nginx/
-|  `- Dockerfile
-|- cloudbuild.yaml
+|  |- tests/
+|  |- Dockerfile
+|  `- README.md
+|- .github/
 |- docker-compose.yml
+|- cloudbuild.yaml
+|- .env.example
 `- README.md
 ```
 
-## Local Development
+## Environment Setup
 
-### Prerequisites
+Create `backend/.env` from [backend/.env.example](C:\Users\prana\OneDrive\Documents\Playground\BriefBiz\backend\.env.example).
 
-- Python 3.11+
-- Node.js 22+
-- Docker Desktop
-
-### Environment Variables
-
-Create `backend/.env` from `backend/.env.example`.
-
-Required backend variables:
+### Required
 
 - `DATABASE_URL`
 - `REDIS_URL`
 - `ELASTICSEARCH_URL`
 - `JWT_SECRET`
 
-Recommended free-tier AI variable:
+### Recommended For AI
 
 - `OPENROUTER_API_KEY`
 
-Optional but used by later phases:
+### Optional
 
 - `OPENAI_API_KEY`
 - `LLM_BASE_URL`
@@ -80,30 +108,31 @@ Optional but used by later phases:
 - `CELERY_BROKER_URL`
 - `CELERY_RESULT_BACKEND`
 
-Free-tier-friendly default setup:
+### Free-Tier Friendly Mode
 
-- Use RSS feeds only and leave `NEWS_API_KEY` empty.
-- Use browser audio and leave `GOOGLE_TTS_KEY` empty.
-- Use `OPENROUTER_API_KEY` with `LLM_MODEL=openrouter/free` for summarization and classification.
-- Use `RESEND_API_KEY` only if you want weekly digest email enabled.
+- Leave `NEWS_API_KEY` empty to use RSS-only ingestion
+- Leave `GOOGLE_TTS_KEY` empty to use browser speech
+- Set `OPENROUTER_API_KEY` and `LLM_MODEL=openrouter/free`
+- Add `RESEND_API_KEY` only if you want weekly digest emails
 
-### Run With Docker Compose
+## Running The App
+
+### Option 1: Docker Compose
+
+From the repo root:
 
 ```bash
 docker compose up --build
 ```
 
-Services started:
+Services:
 
-- `frontend` on `http://localhost`
-- `api` behind Nginx at `http://localhost/api`
-- `worker`
-- `beat`
-- `postgres`
-- `redis`
-- `elasticsearch`
+- Frontend: `http://localhost`
+- API through Nginx: `http://localhost/api`
+- Backend health: `http://localhost/api/health`
+- Supporting services: Postgres, Redis, Elasticsearch, worker, beat
 
-### Run Without Docker
+### Option 2: Run Backend And Frontend Separately
 
 Backend:
 
@@ -122,38 +151,81 @@ npm install
 npm run dev
 ```
 
-## Production Containers
+Typical local URLs:
 
-### Backend Image
+- Frontend: `http://localhost:5173`
+- Backend: `http://localhost:8000`
+- Backend health: `http://localhost:8000/health`
 
-- File: `backend/Dockerfile`
+### Workers
+
+If you want ingestion, summarization, notifications, and scheduled jobs:
+
+```bash
+cd backend
+celery -A app.workers.celery_app.celery_app worker --loglevel=info
+celery -A app.workers.celery_app.celery_app beat --loglevel=info
+```
+
+## API Overview
+
+Main route groups:
+
+- `/health`
+- `/auth`
+- `/feed`
+- `/articles`
+- `/companies`
+- `/search`
+- `/notifications`
+
+## Testing And Verification
+
+### Backend
+
+From `backend/`:
+
+```bash
+python -m compileall app tests
+python -m pytest tests
+```
+
+If your host Python environment is unreliable, use the containerized path:
+
+```bash
+docker compose --profile test run --rm api-test
+```
+
+### Frontend
+
+From `frontend/`:
+
+```bash
+npm run build
+```
+
+## Deployment
+
+### Backend Container
+
+- File: [backend/Dockerfile](C:\Users\prana\OneDrive\Documents\Playground\BriefBiz\backend\Dockerfile)
 - Runs FastAPI with `uvicorn`
-- Supports Cloud Run `PORT` injection
+- Supports Cloud Run `PORT`
 
-### Frontend Image
+### Frontend Container
 
-- File: `frontend/Dockerfile`
-- Multi-stage build: Vite build output served by Nginx
-- Nginx template proxies:
-  - `/api/*` to the backend upstream
-  - `/media/*` to backend-served audio/share-card assets
-  - `/*` to the React SPA
+- File: [frontend/Dockerfile](C:\Users\prana\OneDrive\Documents\Playground\BriefBiz\frontend\Dockerfile)
+- Builds the Vite app and serves it with Nginx
+- Proxies `/api/*` and `/media/*` to the backend upstream
 
-## Health Checks
+### Cloud Build
 
-- Backend: `GET /health`
-- Frontend container: `GET /healthz`
-
-## Cloud Build / Cloud Run
-
-`cloudbuild.yaml` builds and pushes two images:
+[cloudbuild.yaml](C:\Users\prana\OneDrive\Documents\Playground\BriefBiz\cloudbuild.yaml) builds and deploys:
 
 - `briefbiz-api`
 - `briefbiz-web`
 
-Then it deploys both to Cloud Run.
-
-Important substitutions:
+Expected substitutions:
 
 - `_REGION`
 - `_REPOSITORY`
@@ -161,76 +233,51 @@ Important substitutions:
 - `_WEB_SERVICE`
 - `_API_UPSTREAM`
 
-`_API_UPSTREAM` should point the frontend Nginx proxy to the deployed API URL.
-
 ## Architecture
 
 ```mermaid
 flowchart LR
-    U["User Browser"] --> N["Nginx Frontend / Reverse Proxy"]
+    U["User Browser"] --> N["Nginx Frontend"]
     N -->|"/"| R["React App"]
     N -->|"/api/*"| A["FastAPI API"]
     N -->|"/media/*"| A
 
     A --> P["PostgreSQL"]
-    A --> E["Elasticsearch"]
     A --> C["Redis"]
+    A --> E["Elasticsearch"]
 
     B["Celery Beat"] --> W["Celery Worker"]
     W --> P
-    W --> E
     W --> C
-    W --> O["OpenRouter or OpenAI-compatible LLM API"]
+    W --> E
+    W --> L["OpenRouter / OpenAI-compatible LLM"]
     W --> T["Optional Google TTS"]
-    W --> S["Optional Resend or SendGrid"]
+    W --> M["Optional Resend / SendGrid"]
 
-    F["RSS Sources + Optional NewsAPI"] --> W
+    S["RSS Feeds + Optional NewsAPI"] --> W
 ```
 
-## Key User Flows
+## Key Developer Docs
 
-- Ingestion: Celery Beat triggers fetchers every 15 minutes, stores raw articles, enriches them, and indexes them.
-- Feed: frontend consumes feed/search/company/profile APIs and falls back to mock data in offline dev scenarios.
-- Notifications: followed-company mentions generate notification rows during ingestion.
-- Share cards: article endpoint generates branded PNG cards on demand.
-- Weekly digest: Sunday 8 AM UTC job builds and sends per-user digest emails.
+- [backend/README.md](C:\Users\prana\OneDrive\Documents\Playground\BriefBiz\backend\README.md)
+- [frontend/README.md](C:\Users\prana\OneDrive\Documents\Playground\BriefBiz\frontend\README.md)
+- [CONTRIBUTING.md](C:\Users\prana\OneDrive\Documents\Playground\BriefBiz\CONTRIBUTING.md)
+- [SECURITY.md](C:\Users\prana\OneDrive\Documents\Playground\BriefBiz\SECURITY.md)
+- [AGENTS.md](C:\Users\prana\OneDrive\Documents\Playground\BriefBiz\AGENTS.md)
 
-## Deployment Notes
+## Current Status
 
-- For Docker Compose, Nginx proxies to `http://api:8000`.
-- For Cloud Run, set frontend `API_UPSTREAM` to the public API service URL.
-- Elasticsearch is configured as single-node in Compose for local development.
-- Redis is used for both Celery broker and cache defaults.
+Implemented across the project:
 
-## Verification
+- project scaffold and infrastructure
+- database schema and migrations
+- ingestion and enrichment workers
+- core REST API
+- frontend app shell and primary product pages
+- share cards, disagreement handling, notifications, and digest plumbing
+- Dockerized local and deployment setup
 
-Recommended checks:
+## Notes
 
-```bash
-python -m compileall backend/app backend/alembic
-cd frontend && npm run build
-docker compose config
-```
-
-Backend tests, using the containerized runner when local Python is unreliable:
-
-```bash
-docker compose --profile test run --rm api-test
-```
-
-## GitHub Project Files
-
-The repository includes a few collaboration and maintenance files for GitHub:
-
-- `CONTRIBUTING.md` for local setup and pull request expectations
-- `SECURITY.md` for private vulnerability reporting guidance
-- `.github/CODEOWNERS` for default review ownership
-- `.github/workflows/ci.yml` for baseline backend and frontend checks
-- issue templates and a pull request template under `.github/`
-
-## Next Work
-
-- Harden auth and OAuth flows
-- Add richer test coverage around workers and deployment paths
-- Add generated OG previews and email previews to CI
-- Add production secret management and observability
+- The root README is the main detailed project guide for GitHub.
+- Folder-level READMEs are intentionally shorter and local to their subprojects.
