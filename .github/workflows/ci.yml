@@ -28,13 +28,13 @@ jobs:
           pip install -e .[dev]
 
       - name: Lint backend
-        run: ruff check .
+        run: ruff check app tests
 
       - name: Validate backend imports
         run: python -m compileall app tests
 
       - name: Run backend tests
-        run: python -m pytest
+        run: python -m pytest tests
 
   frontend-build:
     runs-on: ubuntu-latest
