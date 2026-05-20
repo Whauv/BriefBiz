@@ -1,0 +1,1480 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="BriefBiz is a business news intelligence platform for founders and investors who need signal over noise."
+    />
+    <title>BriefBiz</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:opsz,wght@9..40,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #080c10;
+        --surface-1: #0d1117;
+        --surface-2: #111720;
+        --surface-3: #161e28;
+        --accent: #00c896;
+        --accent-amber: #f0a500;
+        --accent-blue: #3b82f6;
+        --text: #e8edf3;
+        --muted: #6b7d8f;
+        --line: rgba(255, 255, 255, 0.07);
+        --border: rgba(0, 200, 150, 0.14);
+        --glow: rgba(0, 200, 150, 0.1);
+        --shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
+        --radius: 18px;
+        --radius-sm: 10px;
+        --max: 1240px;
+        --nav-height: 84px;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        color: var(--text);
+        background:
+          radial-gradient(ellipse 60% 50% at 20% 18%, rgba(0, 200, 150, 0.04), transparent 60%),
+          radial-gradient(circle at 86% 12%, rgba(240, 165, 0, 0.04), transparent 22%),
+          linear-gradient(180deg, #080c10 0%, #0a0e13 48%, #080c10 100%);
+        font-family: "Inter", sans-serif;
+        -webkit-font-smoothing: antialiased;
+        text-rendering: optimizeLegibility;
+      }
+
+      body.cursor-active,
+      body.cursor-active * {
+        cursor: none !important;
+      }
+
+      body.nav-open {
+        overflow: hidden;
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      img,
+      svg {
+        display: block;
+      }
+
+      .page-shell {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .page-shell::before {
+        content: "";
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        background-image:
+          radial-gradient(rgba(255, 255, 255, 0.03) 0.7px, transparent 0.7px),
+          radial-gradient(rgba(255, 255, 255, 0.015) 0.6px, transparent 0.6px);
+        background-position: 0 0, 18px 18px;
+        background-size: 36px 36px;
+        mask-image: linear-gradient(180deg, rgba(255, 255, 255, 0.8), transparent 82%);
+        opacity: 0.45;
+        z-index: 0;
+      }
+
+      .container {
+        position: relative;
+        z-index: 1;
+        width: min(var(--max), calc(100% - 48px));
+        margin: 0 auto;
+      }
+
+      .site-header {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        transition:
+          background 0.18s ease,
+          border-color 0.18s ease,
+          box-shadow 0.18s ease;
+      }
+
+      .site-header.is-scrolled {
+        background: rgba(8, 12, 16, 0.88);
+        backdrop-filter: blur(16px);
+        border-bottom: 1px solid var(--line);
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.24);
+      }
+
+      .nav-shell {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        min-height: var(--nav-height);
+        gap: 24px;
+      }
+
+      .brand {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .brand-mark {
+        font-size: 1.1rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        color: var(--text);
+      }
+
+      .brand-tagline {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.72rem;
+        color: var(--muted);
+        letter-spacing: 0.02em;
+      }
+
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+
+      .repo-link,
+      .product-link,
+      .hero-outline,
+      .hero-primary,
+      .panel-primary,
+      .panel-secondary,
+      .menu-link {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border-radius: 6px;
+        border: 1px solid transparent;
+        transition:
+          transform 0.18s ease,
+          background 0.12s ease,
+          color 0.12s ease,
+          border-color 0.12s ease,
+          box-shadow 0.12s ease;
+      }
+
+      .repo-link {
+        padding: 10px 14px;
+        color: var(--muted);
+        font-size: 0.94rem;
+        font-weight: 500;
+      }
+
+      .repo-link:hover {
+        color: var(--text);
+      }
+
+      .product-link,
+      .hero-primary,
+      .panel-primary {
+        padding: 12px 18px;
+        background: var(--accent);
+        color: var(--bg);
+        font-weight: 600;
+        box-shadow: 0 0 0 rgba(0, 200, 150, 0);
+      }
+
+      .product-link:hover,
+      .hero-primary:hover,
+      .panel-primary:hover {
+        background: #13d7a6;
+        box-shadow: 0 0 18px rgba(0, 200, 150, 0.3);
+        transform: translateY(-1px);
+      }
+
+      .hero-outline,
+      .panel-secondary {
+        padding: 12px 18px;
+        border-color: rgba(255, 255, 255, 0.1);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text);
+        font-weight: 500;
+      }
+
+      .hero-outline:hover,
+      .panel-secondary:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(0, 200, 150, 0.2);
+        transform: translateY(-1px);
+      }
+
+      .hamburger {
+        display: none;
+        width: 44px;
+        height: 44px;
+        align-items: center;
+        justify-content: center;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text);
+      }
+
+      .mobile-menu {
+        display: none;
+      }
+
+      .ticker {
+        width: 100%;
+        overflow: hidden;
+        border-top: 1px solid rgba(255, 255, 255, 0.04);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+        background: rgba(255, 255, 255, 0.03);
+      }
+
+      .ticker-track {
+        display: flex;
+        width: max-content;
+        min-width: 100%;
+        animation: tickerMove 28s linear infinite;
+        will-change: transform;
+      }
+
+      .ticker-row {
+        white-space: nowrap;
+        padding: 11px 28px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.7rem;
+        color: var(--muted);
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+      }
+
+      @keyframes tickerMove {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(-50%);
+        }
+      }
+
+      .hero {
+        position: relative;
+        padding: 54px 0 36px;
+        background: #080c10;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 55%) minmax(0, 45%);
+        gap: 36px;
+        align-items: start;
+      }
+
+      .eyebrow {
+        font-size: 0.72rem;
+        font-weight: 500;
+        letter-spacing: 0.34em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow-green {
+        color: var(--accent);
+      }
+
+      .eyebrow-amber {
+        color: var(--accent-amber);
+      }
+
+      .eyebrow-blue {
+        color: rgba(59, 130, 246, 0.84);
+      }
+
+      .hero-title {
+        margin: 18px 0 0;
+        font-family: "DM Serif Display", serif;
+        font-size: clamp(2.6rem, 5.5vw, 5.2rem);
+        line-height: 0.98;
+        letter-spacing: -0.02em;
+        color: var(--text);
+      }
+
+      .hero-title .word {
+        display: inline-block;
+        margin-right: 0.16em;
+        clip-path: inset(0 0 100% 0);
+      }
+
+      .hero-title .word.signal {
+        color: var(--accent);
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .hero-title .word.animate {
+          animation: heroWordReveal 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+      }
+
+      @keyframes heroWordReveal {
+        from {
+          clip-path: inset(0 0 100% 0);
+          transform: translateY(16px);
+        }
+        to {
+          clip-path: inset(0 0 0 0);
+          transform: translateY(0);
+        }
+      }
+
+      .hero-copy {
+        margin: 22px 0 0;
+        max-width: 52ch;
+        color: #94a3b8;
+        font-size: 1.05rem;
+        line-height: 1.95;
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .hero-copy {
+          opacity: 0;
+          animation: delayedFade 0.6s ease forwards;
+          animation-delay: 0.5s;
+        }
+      }
+
+      @keyframes delayedFade {
+        to {
+          opacity: 1;
+        }
+      }
+
+      .hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 28px;
+      }
+
+      .stats-row {
+        display: flex;
+        align-items: stretch;
+        margin-top: 28px;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 6px;
+        overflow: hidden;
+        background: rgba(255, 255, 255, 0.04);
+      }
+
+      .stat-pill {
+        flex: 1 1 0;
+        min-width: 0;
+        padding: 14px 16px;
+      }
+
+      .stat-pill + .stat-pill {
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .stat-label {
+        display: block;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.66rem;
+        color: var(--muted);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+
+      .stat-value {
+        display: block;
+        margin-top: 6px;
+        font-size: 0.92rem;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      .command-panel {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(0, 200, 150, 0.18);
+        border-radius: 16px;
+        background: var(--surface-1);
+        box-shadow:
+          0 0 60px rgba(0, 200, 150, 0.06),
+          0 0 0 1px rgba(0, 200, 150, 0.12);
+      }
+
+      .command-panel::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 24%),
+          linear-gradient(90deg, rgba(0, 200, 150, 0.07), transparent 38%);
+        pointer-events: none;
+      }
+
+      .command-header {
+        position: relative;
+        padding: 28px 28px 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+      }
+
+      .command-header h2 {
+        margin: 10px 0 0;
+        font-size: 1.45rem;
+        font-weight: 600;
+      }
+
+      .command-icon {
+        flex: 0 0 auto;
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        border: 1px solid rgba(0, 200, 150, 0.16);
+        background: rgba(0, 200, 150, 0.08);
+        display: grid;
+        place-items: center;
+        color: var(--accent);
+      }
+
+      .signal-list {
+        position: relative;
+        padding: 0 0 10px;
+      }
+
+      .signal-row {
+        position: relative;
+        display: grid;
+        grid-template-columns: 22px minmax(0, 1fr);
+        gap: 14px;
+        align-items: start;
+        padding: 18px 28px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        transition:
+          background 0.14s ease,
+          border-color 0.14s ease;
+      }
+
+      .signal-row::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: 12px;
+        bottom: 12px;
+        width: 2px;
+        background: transparent;
+        transition: background 0.14s ease;
+      }
+
+      .signal-row:hover {
+        background: rgba(255, 255, 255, 0.015);
+      }
+
+      .signal-row:hover::before {
+        background: var(--accent);
+      }
+
+      .signal-row:nth-child(even) {
+        background: rgba(255, 255, 255, 0.01);
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        .signal-row {
+          opacity: 0;
+          transform: translateY(12px);
+          animation: rowIn 0.42s ease forwards;
+        }
+      }
+
+      .signal-row:nth-child(1) {
+        animation-delay: 0.08s;
+      }
+
+      .signal-row:nth-child(2) {
+        animation-delay: 0.16s;
+      }
+
+      .signal-row:nth-child(3) {
+        animation-delay: 0.24s;
+      }
+
+      .signal-row:nth-child(4) {
+        animation-delay: 0.32s;
+      }
+
+      @keyframes rowIn {
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .signal-row p {
+        margin: 0;
+        color: #d5dde6;
+        font-size: 0.95rem;
+        line-height: 1.8;
+      }
+
+      .section {
+        padding: 62px 0;
+      }
+
+      .section-dark-alt {
+        background: #0a0e13;
+      }
+
+      .section-head {
+        max-width: 760px;
+        margin-bottom: 30px;
+      }
+
+      .section-title {
+        margin: 12px 0 0;
+        font-size: clamp(1.8rem, 3.5vw, 3rem);
+        line-height: 1.08;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+      }
+
+      .editorial-grid {
+        display: grid;
+        grid-template-columns: 58fr 42fr;
+        gap: 18px;
+      }
+
+      .editorial-grid + .editorial-grid {
+        margin-top: 18px;
+      }
+
+      .editorial-grid.reverse {
+        grid-template-columns: 42fr 58fr;
+      }
+
+      .feature-card {
+        position: relative;
+        overflow: hidden;
+        min-height: 238px;
+        padding: 26px;
+        border-radius: 16px;
+        background: var(--surface-1);
+        border: 1px solid var(--line);
+        transition:
+          transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+          box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+          border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+      }
+
+      .feature-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(0, 200, 150, 0.14);
+        box-shadow:
+          0 16px 40px rgba(0, 0, 0, 0.4),
+          0 0 0 1px rgba(0, 200, 150, 0.14);
+      }
+
+      .feature-card .ghost-word {
+        position: absolute;
+        right: 22px;
+        bottom: 10px;
+        font-size: clamp(2.2rem, 6vw, 4.8rem);
+        font-weight: 800;
+        letter-spacing: -0.05em;
+        color: rgba(232, 237, 243, 0.025);
+        pointer-events: none;
+        user-select: none;
+      }
+
+      .feature-badge {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: rgba(0, 200, 150, 0.08);
+        display: grid;
+        place-items: center;
+        color: var(--accent);
+      }
+
+      .feature-card h3 {
+        margin: 18px 0 0;
+        font-size: 1.4rem;
+        font-weight: 600;
+      }
+
+      .feature-card p {
+        position: relative;
+        z-index: 1;
+        margin: 12px 0 0;
+        max-width: 40ch;
+        color: var(--muted);
+        line-height: 1.9;
+      }
+
+      .two-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+        gap: 22px;
+      }
+
+      .panel {
+        border-radius: 18px;
+        border: 1px solid var(--line);
+        padding: 28px;
+      }
+
+      .panel-install {
+        background: var(--surface-1);
+      }
+
+      .panel-map {
+        background: var(--surface-2);
+      }
+
+      .panel h2 {
+        margin: 12px 0 0;
+        font-size: clamp(1.75rem, 3vw, 2.3rem);
+        line-height: 1.12;
+        font-weight: 700;
+        letter-spacing: -0.03em;
+      }
+
+      .timeline {
+        position: relative;
+        margin-top: 26px;
+        padding-left: 18px;
+      }
+
+      .timeline::before {
+        content: "";
+        position: absolute;
+        left: 18px;
+        top: 10px;
+        bottom: 10px;
+        width: 1px;
+        transform-origin: top;
+        background: rgba(0, 200, 150, 0.25);
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        @supports (animation-timeline: view()) {
+          .timeline::before {
+            animation: lineGrow linear both;
+            animation-timeline: view();
+            animation-range: entry 0% entry 70%;
+          }
+        }
+      }
+
+      @keyframes lineGrow {
+        from {
+          transform: scaleY(0);
+        }
+        to {
+          transform: scaleY(1);
+        }
+      }
+
+      .step {
+        position: relative;
+        display: grid;
+        grid-template-columns: 44px minmax(0, 1fr);
+        gap: 14px;
+        align-items: start;
+        padding: 0 0 20px;
+      }
+
+      .step:last-child {
+        padding-bottom: 0;
+      }
+
+      .step-badge {
+        position: relative;
+        z-index: 1;
+        width: 36px;
+        height: 36px;
+        border-radius: 999px;
+        background: rgba(0, 200, 150, 0.1);
+        border: 1px solid rgba(0, 200, 150, 0.18);
+        display: grid;
+        place-items: center;
+        color: var(--accent);
+        font-size: 0.88rem;
+        font-weight: 600;
+      }
+
+      .step-copy {
+        padding-top: 4px;
+      }
+
+      .step-copy p {
+        margin: 0;
+        color: var(--text);
+        line-height: 1.85;
+      }
+
+      .code-block {
+        position: relative;
+        margin-top: 26px;
+        border: 1px solid rgba(0, 200, 150, 0.14);
+        border-radius: 10px;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.4);
+      }
+
+      .code-block::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 3px;
+        background: var(--accent);
+      }
+
+      .code-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+        padding: 14px 16px 0 20px;
+      }
+
+      .code-label {
+        font-size: 0.68rem;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .copy-button {
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--text);
+        padding: 8px 12px;
+        font-size: 0.8rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .copy-button:hover {
+        border-color: rgba(0, 200, 150, 0.22);
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .code-block pre {
+        margin: 0;
+        padding: 16px 18px 18px 20px;
+        overflow-x: auto;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.92rem;
+        line-height: 1.9;
+        color: var(--text);
+      }
+
+      .token-command {
+        color: var(--accent);
+      }
+
+      .token-path {
+        color: var(--text);
+      }
+
+      .token-flag {
+        color: var(--accent-amber);
+      }
+
+      .product-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 26px;
+      }
+
+      .map-card {
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        background: rgba(255, 255, 255, 0.03);
+        padding: 18px;
+        transition:
+          transform 0.18s ease,
+          border-color 0.18s ease,
+          background 0.18s ease;
+      }
+
+      .map-card:hover {
+        transform: translateY(-2px);
+        background: rgba(255, 255, 255, 0.05);
+        border-color: rgba(0, 200, 150, 0.25);
+      }
+
+      .map-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 1.04rem;
+        font-weight: 600;
+      }
+
+      .map-dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        flex: 0 0 auto;
+      }
+
+      .dot-green {
+        background: var(--accent);
+      }
+
+      .dot-amber {
+        background: var(--accent-amber);
+      }
+
+      .dot-blue {
+        background: var(--accent-blue);
+      }
+
+      .dot-white {
+        background: rgba(255, 255, 255, 0.75);
+      }
+
+      .map-card p {
+        margin: 10px 0 0;
+        color: var(--muted);
+        line-height: 1.85;
+        font-size: 0.93rem;
+      }
+
+      .panel-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 14px;
+        margin-top: 24px;
+      }
+
+      .reveal,
+      .fade-in {
+        will-change: clip-path, opacity, transform;
+      }
+
+      @media (prefers-reduced-motion: no-preference) {
+        @supports (animation-timeline: view()) {
+          .reveal {
+            clip-path: inset(0 0 100% 0);
+            animation: revealClip linear both;
+            animation-timeline: view();
+            animation-range: entry 0% entry 70%;
+          }
+
+          .fade-in {
+            opacity: 0;
+            animation: fadeIn linear both;
+            animation-timeline: view();
+            animation-range: entry 0% entry 55%;
+          }
+        }
+      }
+
+      @keyframes revealClip {
+        to {
+          clip-path: inset(0 0 0 0);
+        }
+      }
+
+      @keyframes fadeIn {
+        to {
+          opacity: 1;
+        }
+      }
+
+      .cursor-dot,
+      .cursor-ring {
+        position: fixed;
+        top: 0;
+        left: 0;
+        pointer-events: none;
+        opacity: 0;
+        transform: translate(-50%, -50%);
+        z-index: 9999;
+      }
+
+      .cursor-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 999px;
+        background: var(--accent);
+      }
+
+      .cursor-ring {
+        width: 26px;
+        height: 26px;
+        border-radius: 999px;
+        border: 1px solid rgba(0, 200, 150, 0.5);
+        z-index: 9998;
+      }
+
+      @media (max-width: 768px) {
+        .container {
+          width: min(var(--max), calc(100% - 28px));
+        }
+
+        .nav-actions {
+          display: none;
+        }
+
+        .hamburger {
+          display: inline-flex;
+        }
+
+        .mobile-menu {
+          display: block;
+          max-height: 0;
+          overflow: hidden;
+          transition:
+            max-height 0.22s ease,
+            opacity 0.22s ease;
+          opacity: 0;
+          border-top: 1px solid transparent;
+        }
+
+        .mobile-menu.is-open {
+          max-height: 220px;
+          opacity: 1;
+          border-top-color: var(--line);
+        }
+
+        .mobile-menu-inner {
+          display: grid;
+          gap: 12px;
+          padding: 16px 0 20px;
+        }
+
+        .menu-link {
+          width: 100%;
+          padding: 12px 14px;
+        }
+
+        .ticker {
+          display: none;
+        }
+
+        .hero {
+          padding-top: 28px;
+        }
+
+        .hero-grid,
+        .two-panel,
+        .editorial-grid,
+        .editorial-grid.reverse {
+          grid-template-columns: 1fr;
+        }
+
+        .section {
+          padding: 46px 0;
+        }
+
+        .hero-title {
+          font-size: clamp(2.4rem, 12vw, 4rem);
+        }
+
+        .hero-copy {
+          font-size: 1rem;
+          line-height: 1.85;
+        }
+
+        .stats-row {
+          flex-direction: column;
+        }
+
+        .stat-pill + .stat-pill {
+          border-left: 0;
+          border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .product-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .panel-actions,
+        .hero-actions {
+          flex-direction: column;
+          align-items: stretch;
+        }
+
+        .repo-link,
+        .product-link,
+        .hero-primary,
+        .hero-outline,
+        .panel-primary,
+        .panel-secondary {
+          width: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page-shell">
+      <header class="site-header" id="siteHeader">
+        <div class="container">
+          <div class="nav-shell">
+            <div class="brand">
+              <div class="brand-mark">BRIEFBIZ</div>
+              <div class="brand-tagline">Business news, distilled for builders</div>
+            </div>
+
+            <nav class="nav-actions" aria-label="Primary">
+              <a
+                class="repo-link"
+                href="https://github.com/Whauv/BriefBiz"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path
+                    d="M12 2C6.48 2 2 6.58 2 12.22c0 4.5 2.87 8.32 6.84 9.67.5.09.68-.22.68-.5 0-.24-.01-1.03-.02-1.87-2.78.62-3.37-1.21-3.37-1.21-.46-1.19-1.11-1.5-1.11-1.5-.91-.64.07-.63.07-.63 1 .07 1.53 1.05 1.53 1.05.89 1.57 2.34 1.12 2.91.86.09-.66.35-1.12.63-1.38-2.22-.26-4.56-1.14-4.56-5.08 0-1.12.39-2.03 1.03-2.74-.1-.26-.45-1.3.1-2.72 0 0 .84-.27 2.75 1.05A9.3 9.3 0 0 1 12 6.82c.85 0 1.7.12 2.5.36 1.9-1.32 2.74-1.05 2.74-1.05.56 1.42.21 2.46.1 2.72.64.71 1.03 1.62 1.03 2.74 0 3.95-2.34 4.82-4.57 5.08.36.31.67.92.67 1.86 0 1.34-.01 2.42-.01 2.75 0 .27.18.59.69.49A10.22 10.22 0 0 0 22 12.22C22 6.58 17.52 2 12 2Z"
+                    fill="currentColor"
+                  />
+                </svg>
+                <span>View repository</span>
+              </a>
+              <a class="product-link" href="/">
+                <span>Open product</span>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </a>
+            </nav>
+
+            <button class="hamburger" id="menuToggle" type="button" aria-expanded="false" aria-controls="mobileMenu" aria-label="Open navigation">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+              </svg>
+            </button>
+          </div>
+
+          <div class="mobile-menu" id="mobileMenu">
+            <div class="mobile-menu-inner">
+              <a
+                class="menu-link hero-outline"
+                href="https://github.com/Whauv/BriefBiz"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View repository
+              </a>
+              <a class="menu-link hero-primary" href="/">Open product</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="ticker" aria-hidden="true">
+          <div class="ticker-track">
+            <div class="ticker-row">
+              BRIEFBIZ SIGNAL · AI Summaries · Funding Radar · Company Timelines · Deep Dives · Weekly Digest · RSS + NewsAPI · Elasticsearch Search ·
+            </div>
+            <div class="ticker-row">
+              BRIEFBIZ SIGNAL · AI Summaries · Funding Radar · Company Timelines · Deep Dives · Weekly Digest · RSS + NewsAPI · Elasticsearch Search ·
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div class="container hero-grid">
+            <div>
+              <div class="eyebrow eyebrow-green">ENTRY PAGE FOR BRIEFBIZ</div>
+              <h1 class="hero-title" id="heroTitle">
+                Track the business stories that matter without reading the whole internet.
+              </h1>
+              <p class="hero-copy">
+                BriefBiz turns startup, venture, and business coverage into a fast, high-signal experience. Users can explore market-moving news, inspect company narratives, and follow a founder-first view of what changed, who is involved, and why it matters.
+              </p>
+              <div class="hero-actions">
+                <a class="hero-primary" href="/">
+                  <span>Launch BriefBiz</span>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </a>
+                <a
+                  class="hero-outline"
+                  href="https://github.com/Whauv/BriefBiz"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span>Explore on GitHub</span>
+                </a>
+              </div>
+              <div class="stats-row fade-in">
+                <div class="stat-pill">
+                  <span class="stat-label">CORE SURFACES</span>
+                  <span class="stat-value">Feed, Search, Radar</span>
+                </div>
+                <div class="stat-pill">
+                  <span class="stat-label">BACKEND STACK</span>
+                  <span class="stat-value">FastAPI + Celery</span>
+                </div>
+                <div class="stat-pill">
+                  <span class="stat-label">EXPERIENCE</span>
+                  <span class="stat-value">AI summaries + deep dives</span>
+                </div>
+              </div>
+            </div>
+
+            <aside class="command-panel fade-in">
+              <div class="command-header">
+                <div>
+                  <div class="eyebrow eyebrow-green">WHAT USERS GET</div>
+                  <h2>A founder-friendly command center</h2>
+                </div>
+                <div class="command-icon" aria-hidden="true">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                    <path d="m9 12 2 2 4-4m5-2c0 6-5.33 9.5-8 10-2.67-.5-8-4-8-10V6l8-3 8 3v2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </div>
+              </div>
+              <div class="signal-list">
+                <div class="signal-row">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="m5 13 4 4L19 7" stroke="#00c896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  <p>AI-generated article summaries, deep dives, and why-it-matters context</p>
+                </div>
+                <div class="signal-row">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="m5 13 4 4L19 7" stroke="#00c896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  <p>RSS and optional NewsAPI ingestion for business and startup coverage</p>
+                </div>
+                <div class="signal-row">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="m5 13 4 4L19 7" stroke="#00c896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  <p>Company extraction, conflict detection, notifications, and weekly digest plumbing</p>
+                </div>
+                <div class="signal-row">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="m5 13 4 4L19 7" stroke="#00c896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                  <p>Frontend experience with feed cards, bookmarks, company profiles, and preference controls</p>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="section section-dark-alt">
+          <div class="container">
+            <div class="section-head">
+              <div class="eyebrow eyebrow-green">WHAT THE PRODUCT DOES</div>
+              <h2 class="section-title reveal">A complete business-news workflow, not just a pretty feed</h2>
+            </div>
+
+            <div class="editorial-grid">
+              <article class="feature-card fade-in">
+                <div class="feature-badge" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M4 6h16M4 12h16M4 18h10" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                  </svg>
+                </div>
+                <h3>Business news, distilled</h3>
+                <p>Swipe through concise article cards with summaries, source quality, sentiment, and strategic context.</p>
+                <div class="ghost-word" aria-hidden="true">DISTILLED</div>
+              </article>
+
+              <article class="feature-card fade-in">
+                <div class="feature-badge" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 3v18M3 12h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                  </svg>
+                </div>
+                <h3>Founder-focused signal</h3>
+                <p>Deep dives break down what happened, who matters, market impact, and what founders or investors should watch next.</p>
+                <div class="ghost-word" aria-hidden="true">SIGNAL</div>
+              </article>
+            </div>
+
+            <div class="editorial-grid reverse">
+              <article class="feature-card fade-in">
+                <div class="feature-badge" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M3 12h4l2-5 4 10 2-5h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </div>
+                <h3>Search and radar</h3>
+                <p>Explore funding activity, company timelines, and searchable article archives across regions and business verticals.</p>
+                <div class="ghost-word" aria-hidden="true">RADAR</div>
+              </article>
+
+              <article class="feature-card fade-in">
+                <div class="feature-badge" aria-hidden="true">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                    <path d="M5 19V5m7 14V9m7 10V13" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                  </svg>
+                </div>
+                <h3>Operational pipeline</h3>
+                <p>FastAPI, Celery, Redis, PostgreSQL, and Elasticsearch power ingestion, enrichment, notification, and digest workflows.</p>
+                <div class="ghost-word" aria-hidden="true">PIPELINE</div>
+              </article>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="container two-panel">
+            <article class="panel panel-install">
+              <div class="eyebrow eyebrow-green">INSTALLATION</div>
+              <h2 class="reveal">Get BriefBiz running locally</h2>
+
+              <div class="timeline fade-in">
+                <div class="step">
+                  <div class="step-badge">1</div>
+                  <div class="step-copy">
+                    <p>Clone the repository and create backend/.env from the provided template.</p>
+                  </div>
+                </div>
+                <div class="step">
+                  <div class="step-badge">2</div>
+                  <div class="step-copy">
+                    <p>Run docker compose up --build to start Postgres, Redis, Elasticsearch, the API, workers, and frontend.</p>
+                  </div>
+                </div>
+                <div class="step">
+                  <div class="step-badge">3</div>
+                  <div class="step-copy">
+                    <p>Open the app, configure API keys if you want AI summaries or email digests, and launch the product from the live BriefBiz app.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="code-block reveal">
+                <div class="code-header">
+                  <div class="code-label">Quick start</div>
+                  <button class="copy-button" id="copyButton" type="button">
+                    <span class="copy-label">Copy</span>
+                  </button>
+                </div>
+                <pre><code id="quickStartCode"><span class="token-command">git</span> clone <span class="token-path">https://github.com/Whauv/BriefBiz</span>
+<span class="token-command">cd</span> <span class="token-path">BriefBiz</span>
+<span class="token-command">docker</span> compose up <span class="token-flag">--build</span></code></pre>
+              </div>
+            </article>
+
+            <article class="panel panel-map">
+              <div class="eyebrow eyebrow-amber">PRODUCT MAP</div>
+              <h2 class="reveal">What users can explore today</h2>
+
+              <div class="product-grid fade-in">
+                <div class="map-card">
+                  <div class="map-title"><span class="map-dot dot-green"></span>Feed</div>
+                  <p>Swipeable article cards with summary, sentiment, why-it-matters context, and deep-dive modal access.</p>
+                </div>
+                <div class="map-card">
+                  <div class="map-title"><span class="map-dot dot-amber"></span>Funding radar</div>
+                  <p>A focused view into funding-related stories and company momentum.</p>
+                </div>
+                <div class="map-card">
+                  <div class="map-title"><span class="map-dot dot-blue"></span>Search</div>
+                  <p>Search across articles and companies with grouped live results.</p>
+                </div>
+                <div class="map-card">
+                  <div class="map-title"><span class="map-dot dot-white"></span>Profiles</div>
+                  <p>Company profiles, bookmarks, notifications, and user preference controls.</p>
+                </div>
+              </div>
+
+              <div class="panel-actions">
+                <a class="panel-primary" href="/">
+                  <span>Open the app</span>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <path d="M7 17 17 7M9 7h8v8" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                  </svg>
+                </a>
+                <a
+                  class="panel-secondary"
+                  href="https://github.com/Whauv/BriefBiz"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span>Read the code</span>
+                </a>
+              </div>
+            </article>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      (() => {
+        const repoUrl = "https://github.com/Whauv/BriefBiz";
+        const productUrl =
+          window.location.protocol === "file:"
+            ? "http://localhost:5173/"
+            : `${window.location.origin}/`;
+
+        document.querySelectorAll('a[href="https://github.com/Whauv/BriefBiz"]').forEach((link) => {
+          link.setAttribute("href", repoUrl);
+        });
+        document.querySelectorAll('a[href="/"]').forEach((link) => {
+          link.setAttribute("href", productUrl);
+        });
+
+        const header = document.getElementById("siteHeader");
+        const onScroll = () => {
+          header.classList.toggle("is-scrolled", window.scrollY > 10);
+        };
+        onScroll();
+        window.addEventListener("scroll", onScroll, { passive: true });
+
+        const title = document.getElementById("heroTitle");
+        const originalText = title.textContent.trim();
+        const words = originalText.split(" ");
+        title.textContent = "";
+
+        words.forEach((word, index) => {
+          const span = document.createElement("span");
+          span.className = "word";
+          if (word.replace(/[^\w]/g, "").toLowerCase() === "matter") {
+            span.classList.add("signal");
+          }
+          span.textContent = word;
+          span.style.animationDelay = `${index * 0.07}s`;
+          title.appendChild(span);
+          if (index !== words.length - 1) {
+            title.appendChild(document.createTextNode(" "));
+          }
+        });
+
+        if (window.matchMedia("(prefers-reduced-motion: no-preference)").matches) {
+          requestAnimationFrame(() => {
+            title.querySelectorAll(".word").forEach((node) => node.classList.add("animate"));
+          });
+        } else {
+          title.querySelectorAll(".word").forEach((node) => {
+            node.style.clipPath = "inset(0 0 0 0)";
+          });
+        }
+
+        const copyButton = document.getElementById("copyButton");
+        const copyLabel = copyButton.querySelector(".copy-label");
+        const quickStartCode = `git clone https://github.com/Whauv/BriefBiz\ncd BriefBiz\ndocker compose up --build`;
+
+        copyButton.addEventListener("click", async () => {
+          try {
+            await navigator.clipboard.writeText(quickStartCode);
+            copyLabel.textContent = "Copied";
+            copyButton.innerHTML =
+              '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m5 13 4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="copy-label">Copied</span>';
+          } catch {
+            copyLabel.textContent = "Copied";
+          }
+
+          window.clearTimeout(copyButton._resetTimer);
+          copyButton._resetTimer = window.setTimeout(() => {
+            copyButton.innerHTML = '<span class="copy-label">Copy</span>';
+          }, 2000);
+        });
+
+        const toggle = document.getElementById("menuToggle");
+        const menu = document.getElementById("mobileMenu");
+
+        if (toggle && menu) {
+          toggle.addEventListener("click", () => {
+            const isOpen = menu.classList.toggle("is-open");
+            toggle.setAttribute("aria-expanded", String(isOpen));
+            document.body.classList.toggle("nav-open", isOpen);
+          });
+
+          menu.querySelectorAll("a").forEach((link) => {
+            link.addEventListener("click", () => {
+              menu.classList.remove("is-open");
+              toggle.setAttribute("aria-expanded", "false");
+              document.body.classList.remove("nav-open");
+            });
+          });
+        }
+
+        if (window.matchMedia("(pointer: fine)").matches) {
+          document.body.classList.add("cursor-active");
+
+          const dot = document.createElement("div");
+          dot.className = "cursor-dot";
+          const ring = document.createElement("div");
+          ring.className = "cursor-ring";
+          document.body.append(dot, ring);
+
+          let mouseX = window.innerWidth / 2;
+          let mouseY = window.innerHeight / 2;
+          let dotX = mouseX;
+          let dotY = mouseY;
+          let ringX = mouseX;
+          let ringY = mouseY;
+          let hovering = false;
+          let pressed = false;
+
+          const render = () => {
+            dotX += (mouseX - dotX) * 0.18;
+            dotY += (mouseY - dotY) * 0.18;
+            ringX += (mouseX - ringX) * 0.09;
+            ringY += (mouseY - ringY) * 0.09;
+
+            dot.style.opacity = "1";
+            ring.style.opacity = "1";
+            dot.style.transform = `translate(${dotX}px, ${dotY}px) translate(-50%, -50%) scale(${pressed ? 0.55 : hovering ? 2 : 1})`;
+            ring.style.transform = `translate(${ringX}px, ${ringY}px) translate(-50%, -50%) scale(${hovering ? 1.69 : 1})`;
+            dot.style.background = hovering ? "#f0a500" : "#00c896";
+            ring.style.borderColor = hovering ? "rgba(240,165,0,0.55)" : "rgba(0,200,150,0.5)";
+
+            window.requestAnimationFrame(render);
+          };
+
+          window.addEventListener("mousemove", (event) => {
+            mouseX = event.clientX;
+            mouseY = event.clientY;
+          });
+
+          window.addEventListener("mousedown", () => {
+            pressed = true;
+          });
+
+          window.addEventListener("mouseup", () => {
+            pressed = false;
+          });
+
+          document.querySelectorAll("a, button").forEach((element) => {
+            element.addEventListener("mouseenter", () => {
+              hovering = true;
+            });
+            element.addEventListener("mouseleave", () => {
+              hovering = false;
+            });
+          });
+
+          render();
+        }
+      })();
+    </script>
+  </body>
+</html>
