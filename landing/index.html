@@ -29,8 +29,9 @@
         --border: rgba(0, 200, 150, 0.14);
         --glow: rgba(0, 200, 150, 0.1);
         --shadow: 0 24px 60px rgba(0, 0, 0, 0.42);
-        --radius: 18px;
-        --radius-sm: 10px;
+        --radius: 8px;
+        --radius-sm: 4px;
+        --cut: 18px;
         --max: 1240px;
         --nav-height: 84px;
       }
@@ -48,9 +49,11 @@
         min-width: 320px;
         color: var(--text);
         background:
-          radial-gradient(ellipse 60% 50% at 20% 18%, rgba(0, 200, 150, 0.04), transparent 60%),
-          radial-gradient(circle at 86% 12%, rgba(240, 165, 0, 0.04), transparent 22%),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+          radial-gradient(ellipse 60% 50% at 20% 18%, rgba(0, 200, 150, 0.045), transparent 60%),
+          radial-gradient(circle at 86% 12%, rgba(240, 165, 0, 0.05), transparent 22%),
           linear-gradient(180deg, #080c10 0%, #0a0e13 48%, #080c10 100%);
+        background-size: 100px 100px, auto, auto, auto;
         font-family: "Inter", sans-serif;
         -webkit-font-smoothing: antialiased;
         text-rendering: optimizeLegibility;
@@ -169,7 +172,7 @@
         align-items: center;
         justify-content: center;
         gap: 10px;
-        border-radius: 6px;
+        border-radius: 4px;
         border: 1px solid transparent;
         transition:
           transform 0.18s ease,
@@ -184,10 +187,13 @@
         color: var(--muted);
         font-size: 0.94rem;
         font-weight: 500;
+        border-color: transparent;
+        background: linear-gradient(90deg, rgba(255, 255, 255, 0.03), transparent);
       }
 
       .repo-link:hover {
         color: var(--text);
+        border-color: rgba(255, 255, 255, 0.08);
       }
 
       .product-link,
@@ -277,14 +283,36 @@
 
       .hero {
         position: relative;
-        padding: 54px 0 36px;
+        padding: 68px 0 44px;
         background: #080c10;
+      }
+
+      .hero::before {
+        content: "";
+        position: absolute;
+        left: max(24px, calc(50% - 620px));
+        top: 112px;
+        bottom: 40px;
+        width: 1px;
+        background: linear-gradient(180deg, transparent, rgba(0, 200, 150, 0.22), transparent);
+      }
+
+      .hero::after {
+        content: "";
+        position: absolute;
+        left: max(18px, calc(50% - 626px));
+        top: 158px;
+        width: 8px;
+        height: 8px;
+        border-radius: 999px;
+        background: var(--accent);
+        box-shadow: 0 0 24px rgba(0, 200, 150, 0.4);
       }
 
       .hero-grid {
         display: grid;
         grid-template-columns: minmax(0, 55%) minmax(0, 45%);
-        gap: 36px;
+        gap: 56px;
         align-items: start;
       }
 
@@ -347,8 +375,8 @@
         margin: 22px 0 0;
         max-width: 52ch;
         color: #94a3b8;
-        font-size: 1.05rem;
-        line-height: 1.95;
+        font-size: 1.02rem;
+        line-height: 1.98;
       }
 
       @media (prefers-reduced-motion: no-preference) {
@@ -373,23 +401,41 @@
       }
 
       .stats-row {
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         align-items: stretch;
         margin-top: 28px;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 6px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         overflow: hidden;
-        background: rgba(255, 255, 255, 0.04);
+        background:
+          linear-gradient(90deg, rgba(255, 255, 255, 0.02), transparent 22%),
+          rgba(255, 255, 255, 0.02);
       }
 
       .stat-pill {
         flex: 1 1 0;
         min-width: 0;
-        padding: 14px 16px;
+        padding: 16px 18px 14px;
+        position: relative;
       }
 
       .stat-pill + .stat-pill {
         border-left: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .stat-pill::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 1px;
+        background: linear-gradient(180deg, transparent, rgba(0, 200, 150, 0.4), transparent);
+        opacity: 0;
+        transition: opacity 0.18s ease;
+      }
+
+      .stat-pill:hover::before {
+        opacity: 1;
       }
 
       .stat-label {
@@ -413,11 +459,12 @@
         position: relative;
         overflow: hidden;
         border: 1px solid rgba(0, 200, 150, 0.18);
-        border-radius: 16px;
+        border-radius: 0;
         background: var(--surface-1);
         box-shadow:
           0 0 60px rgba(0, 200, 150, 0.06),
           0 0 0 1px rgba(0, 200, 150, 0.12);
+        clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, var(--cut) 100%, 0 calc(100% - var(--cut)));
       }
 
       .command-panel::before {
@@ -425,8 +472,15 @@
         position: absolute;
         inset: 0;
         background:
-          linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 24%),
-          linear-gradient(90deg, rgba(0, 200, 150, 0.07), transparent 38%);
+          linear-gradient(180deg, rgba(255, 255, 255, 0.035), transparent 24%),
+          linear-gradient(90deg, rgba(0, 200, 150, 0.05), transparent 38%),
+          repeating-linear-gradient(
+            180deg,
+            transparent 0,
+            transparent 73px,
+            rgba(255, 255, 255, 0.03) 73px,
+            rgba(255, 255, 255, 0.03) 74px
+          );
         pointer-events: none;
       }
 
@@ -465,7 +519,7 @@
       .signal-row {
         position: relative;
         display: grid;
-        grid-template-columns: 22px minmax(0, 1fr);
+        grid-template-columns: 56px 22px minmax(0, 1fr);
         gap: 14px;
         align-items: start;
         padding: 18px 28px;
@@ -496,6 +550,24 @@
 
       .signal-row:nth-child(even) {
         background: rgba(255, 255, 255, 0.01);
+      }
+
+      .signal-row::after {
+        content: attr(data-row);
+        grid-column: 1;
+        justify-self: start;
+        align-self: start;
+        padding-top: 2px;
+        color: rgba(107, 125, 143, 0.7);
+        font-family: "JetBrains Mono", monospace;
+        font-size: 0.68rem;
+        letter-spacing: 0.14em;
+      }
+
+      .signal-row > svg {
+        grid-column: 2;
+        align-self: start;
+        margin-top: 2px;
       }
 
       @media (prefers-reduced-motion: no-preference) {
@@ -530,6 +602,7 @@
       }
 
       .signal-row p {
+        grid-column: 3;
         margin: 0;
         color: #d5dde6;
         font-size: 0.95rem;
@@ -560,7 +633,7 @@
       .editorial-grid {
         display: grid;
         grid-template-columns: 58fr 42fr;
-        gap: 18px;
+        gap: 22px;
       }
 
       .editorial-grid + .editorial-grid {
@@ -574,15 +647,19 @@
       .feature-card {
         position: relative;
         overflow: hidden;
-        min-height: 238px;
-        padding: 26px;
-        border-radius: 16px;
-        background: var(--surface-1);
+        min-height: 250px;
+        padding: 30px 30px 28px;
+        border-radius: 0;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 28%),
+          linear-gradient(135deg, rgba(255, 255, 255, 0.02), transparent 38%),
+          var(--surface-1);
         border: 1px solid var(--line);
         transition:
           transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
           box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1),
           border-color 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 0 100%);
       }
 
       .feature-card:hover {
@@ -591,6 +668,26 @@
         box-shadow:
           0 16px 40px rgba(0, 0, 0, 0.4),
           0 0 0 1px rgba(0, 200, 150, 0.14);
+      }
+
+      .feature-card::before {
+        content: "";
+        position: absolute;
+        inset: 0 auto 0 0;
+        width: 2px;
+        background: linear-gradient(180deg, rgba(0, 200, 150, 0.55), transparent 68%);
+      }
+
+      .editorial-grid .feature-card:nth-child(2) {
+        clip-path: polygon(22px 0, 100% 0, 100% calc(100% - 22px), calc(100% - 22px) 100%, 0 100%, 0 22px);
+      }
+
+      .editorial-grid.reverse .feature-card:first-child {
+        clip-path: polygon(18px 0, 100% 0, 100% 100%, 0 100%, 0 18px);
+      }
+
+      .editorial-grid.reverse .feature-card:last-child {
+        clip-path: polygon(0 0, calc(100% - 26px) 0, 100% 26px, 100% 100%, 22px 100%, 0 calc(100% - 22px));
       }
 
       .feature-card .ghost-word {
@@ -633,13 +730,16 @@
       .two-panel {
         display: grid;
         grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
-        gap: 22px;
+        gap: 26px;
       }
 
       .panel {
-        border-radius: 18px;
+        position: relative;
+        overflow: hidden;
+        border-radius: 0;
         border: 1px solid var(--line);
-        padding: 28px;
+        padding: 30px;
+        clip-path: polygon(0 0, calc(100% - 20px) 0, 100% 20px, 100% 100%, 0 100%);
       }
 
       .panel-install {
@@ -648,6 +748,16 @@
 
       .panel-map {
         background: var(--surface-2);
+      }
+
+      .panel::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 20%),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.02), transparent 26%);
       }
 
       .panel h2 {
@@ -661,7 +771,7 @@
       .timeline {
         position: relative;
         margin-top: 26px;
-        padding-left: 18px;
+        padding-left: 8px;
       }
 
       .timeline::before {
@@ -698,9 +808,9 @@
         position: relative;
         display: grid;
         grid-template-columns: 44px minmax(0, 1fr);
-        gap: 14px;
+        gap: 18px;
         align-items: start;
-        padding: 0 0 20px;
+        padding: 0 0 26px;
       }
 
       .step:last-child {
@@ -723,7 +833,10 @@
       }
 
       .step-copy {
-        padding-top: 4px;
+        padding-top: 2px;
+        border-top: 1px solid rgba(255, 255, 255, 0.06);
+        padding-right: 6px;
+        padding-top: 12px;
       }
 
       .step-copy p {
@@ -736,9 +849,10 @@
         position: relative;
         margin-top: 26px;
         border: 1px solid rgba(0, 200, 150, 0.14);
-        border-radius: 10px;
+        border-radius: 0;
         overflow: hidden;
         background: rgba(0, 0, 0, 0.4);
+        clip-path: polygon(0 0, calc(100% - 16px) 0, 100% 16px, 100% 100%, 0 100%);
       }
 
       .code-block::before {
@@ -806,25 +920,53 @@
       .product-grid {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px;
+        gap: 16px;
         margin-top: 26px;
       }
 
       .map-card {
-        border-radius: 12px;
+        position: relative;
+        border-radius: 0;
         border: 1px solid rgba(255, 255, 255, 0.07);
-        background: rgba(255, 255, 255, 0.03);
-        padding: 18px;
+        background:
+          linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent 24%),
+          rgba(255, 255, 255, 0.03);
+        padding: 18px 18px 20px;
         transition:
           transform 0.18s ease,
           border-color 0.18s ease,
           background 0.18s ease;
+        clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
       }
 
       .map-card:hover {
         transform: translateY(-2px);
         background: rgba(255, 255, 255, 0.05);
         border-color: rgba(0, 200, 150, 0.25);
+      }
+
+      .map-card::before,
+      .map-card::after {
+        content: "";
+        position: absolute;
+        width: 14px;
+        height: 14px;
+        border-color: rgba(255, 255, 255, 0.08);
+        pointer-events: none;
+      }
+
+      .map-card::before {
+        top: 10px;
+        right: 10px;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        border-right: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .map-card::after {
+        bottom: 10px;
+        left: 10px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        border-left: 1px solid rgba(255, 255, 255, 0.08);
       }
 
       .map-title {
@@ -980,6 +1122,11 @@
 
         .hero {
           padding-top: 28px;
+        }
+
+        .hero::before,
+        .hero::after {
+          display: none;
         }
 
         .hero-grid,
@@ -1155,25 +1302,25 @@
                 </div>
               </div>
               <div class="signal-list">
-                <div class="signal-row">
+                <div class="signal-row" data-row="01">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="m5 13 4 4L19 7" stroke="#00c896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                   <p>AI-generated article summaries, deep dives, and why-it-matters context</p>
                 </div>
-                <div class="signal-row">
+                <div class="signal-row" data-row="02">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="m5 13 4 4L19 7" stroke="#00c896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                   <p>RSS and optional NewsAPI ingestion for business and startup coverage</p>
                 </div>
-                <div class="signal-row">
+                <div class="signal-row" data-row="03">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="m5 13 4 4L19 7" stroke="#00c896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                   <p>Company extraction, conflict detection, notifications, and weekly digest plumbing</p>
                 </div>
-                <div class="signal-row">
+                <div class="signal-row" data-row="04">
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
                     <path d="m5 13 4 4L19 7" stroke="#00c896" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
