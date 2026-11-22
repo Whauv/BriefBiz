@@ -2,13 +2,12 @@ from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import FileResponse
-from sqlalchemy import delete, select
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.db.session import get_db_session
 from app.models.article import Article
-from app.models.social import Bookmark, FounderReaction
 from app.models.user import User
 from app.schemas.articles import (
     ArticleDetailResponse,
@@ -17,8 +16,9 @@ from app.schemas.articles import (
     ReactionResponse,
     ShareCardResponse,
 )
-from app.services.share_cards import ShareCardService
 from app.services.serializers import get_article_company_names, serialize_article_detail
+from app.services.share_cards import ShareCardService
+from app.services.social_service import SocialService
 
 router = APIRouter(prefix="/articles", tags=["articles"])
 
@@ -66,14 +66,7 @@ async def create_bookmark(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> BookmarkResponse:
-    await _get_article_or_404(session, article_id)
-    existing = await session.execute(
-        select(Bookmark).where(Bookmark.user_id == current_user.id, Bookmark.article_id == article_id)
-    )
-    bookmark = existing.scalar_one_or_none()
-    if bookmark is None:
-        session.add(Bookmark(user_id=current_user.id, article_id=article_id))
-        await session.commit()
+    await SocialService(session).add_bookmark(user_id=current_user.id, article_id=article_id)
     return BookmarkResponse(article_id=article_id, bookmarked=True)
 
 
@@ -83,10 +76,7 @@ async def delete_bookmark(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> BookmarkResponse:
-    await session.execute(
-        delete(Bookmark).where(Bookmark.user_id == current_user.id, Bookmark.article_id == article_id)
-    )
-    await session.commit()
+    await SocialService(session).remove_bookmark(user_id=current_user.id, article_id=article_id)
     return BookmarkResponse(article_id=article_id, bookmarked=False)
 
 
@@ -97,15 +87,11 @@ async def create_reaction(
     current_user: User = Depends(get_current_user),
     session: AsyncSession = Depends(get_db_session),
 ) -> ReactionResponse:
-    await _get_article_or_404(session, article_id)
-    reaction = FounderReaction(
-        article_id=article_id,
+    reaction = await SocialService(session).add_reaction(
         user_id=current_user.id,
-        reaction_text=payload.reaction_text.strip(),
+        article_id=article_id,
+        reaction_text=payload.reaction_text,
     )
-    session.add(reaction)
-    await session.commit()
-    await session.refresh(reaction)
     return ReactionResponse(
         id=reaction.id,
         article_id=reaction.article_id,

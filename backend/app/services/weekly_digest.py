@@ -4,6 +4,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import httpx
+import structlog
 from jinja2 import Environment, FileSystemLoader, select_autoescape
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -11,6 +12,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.config import get_settings
 from app.models.article import Article
 from app.models.user import User
+
+logger = structlog.get_logger(__name__)
 
 
 class WeeklyDigestService:
@@ -70,7 +73,8 @@ class WeeklyDigestService:
                 )
                 response.raise_for_status()
             return True
-        except Exception:
+        except httpx.HTTPError:
+            logger.warning("weekly_digest_sendgrid_failed", exc_info=True)
             return False
 
     async def _send_with_resend(self, email: str, html: str) -> bool:
@@ -92,5 +96,6 @@ class WeeklyDigestService:
                 )
                 response.raise_for_status()
             return True
-        except Exception:
+        except httpx.HTTPError:
+            logger.warning("weekly_digest_resend_failed", exc_info=True)
             return False

@@ -1,13 +1,13 @@
 import {
   createContext,
   useContext,
-  useEffect,
   useMemo,
-  useState,
   type ReactNode,
 } from "react";
 
+import { usePersistentState } from "../hooks/usePersistentState";
 import type { AuthUser, NotificationItem, Preferences } from "../types";
+import { setApiAuthToken } from "../utils/api";
 import { defaultPreferences, mockNotifications } from "../utils/mockData";
 import { AUTH_TOKEN_KEY } from "../utils/query";
 
@@ -40,68 +40,24 @@ const PREFERENCES_KEY = "briefbiz-preferences";
 const NOTIFICATIONS_KEY = "briefbiz-notifications";
 const CURRENT_USER_KEY = "briefbiz-current-user";
 
-function readStorage<T>(key: string, fallback: T): T {
-  if (typeof window === "undefined") {
-    return fallback;
-  }
-  const value = window.localStorage.getItem(key);
-  if (!value) {
-    return fallback;
-  }
-  try {
-    return JSON.parse(value) as T;
-  } catch {
-    return fallback;
-  }
-}
-
 interface AppStoreProviderProps {
   children: ReactNode;
 }
 
 export function AppStoreProvider({ children }: AppStoreProviderProps) {
-  const [bookmarks, setBookmarks] = useState<number[]>(() => readStorage(BOOKMARKS_KEY, [101, 103]));
-  const [dismissed, setDismissed] = useState<number[]>(() => readStorage(DISMISSED_KEY, []));
-  const [preferences, setPreferences] = useState<Preferences>(() =>
-    readStorage(PREFERENCES_KEY, defaultPreferences),
+  const [bookmarks, setBookmarks] = usePersistentState<number[]>(BOOKMARKS_KEY, [101, 103]);
+  const [dismissed, setDismissed] = usePersistentState<number[]>(DISMISSED_KEY, []);
+  const [preferences, setPreferences] = usePersistentState<Preferences>(PREFERENCES_KEY, defaultPreferences);
+  const [notifications, setNotifications] = usePersistentState<NotificationItem[]>(
+    NOTIFICATIONS_KEY,
+    mockNotifications,
   );
-  const [notifications, setNotifications] = useState<NotificationItem[]>(() =>
-    readStorage(NOTIFICATIONS_KEY, mockNotifications),
-  );
-  const [authToken, setAuthToken] = useState<string | null>(() => readStorage(AUTH_TOKEN_KEY, null));
-  const [currentUser, setCurrentUserState] = useState<AuthUser | null>(() => readStorage(CURRENT_USER_KEY, null));
+  const [authToken, setAuthToken] = usePersistentState<string | null>(AUTH_TOKEN_KEY, null);
+  const [currentUser, setCurrentUserState] = usePersistentState<AuthUser | null>(CURRENT_USER_KEY, null);
 
-  useEffect(() => {
-    window.localStorage.setItem(BOOKMARKS_KEY, JSON.stringify(bookmarks));
-  }, [bookmarks]);
-
-  useEffect(() => {
-    window.localStorage.setItem(DISMISSED_KEY, JSON.stringify(dismissed));
-  }, [dismissed]);
-
-  useEffect(() => {
-    window.localStorage.setItem(PREFERENCES_KEY, JSON.stringify(preferences));
-  }, [preferences]);
-
-  useEffect(() => {
-    window.localStorage.setItem(NOTIFICATIONS_KEY, JSON.stringify(notifications));
-  }, [notifications]);
-
-  useEffect(() => {
-    if (authToken) {
-      window.localStorage.setItem(AUTH_TOKEN_KEY, JSON.stringify(authToken));
-    } else {
-      window.localStorage.removeItem(AUTH_TOKEN_KEY);
-    }
-  }, [authToken]);
-
-  useEffect(() => {
-    if (currentUser) {
-      window.localStorage.setItem(CURRENT_USER_KEY, JSON.stringify(currentUser));
-    } else {
-      window.localStorage.removeItem(CURRENT_USER_KEY);
-    }
-  }, [currentUser]);
+  // Keep the API client's bearer token in sync with the store (single source of truth).
+  // Done during render so the token is set before children fire their first request.
+  setApiAuthToken(authToken);
 
   const value = useMemo<AppStoreValue>(
     () => ({

@@ -27,3 +27,6 @@ frontend/.vite/
 **/__pycache__/
 .idea/
 .vscode/
+
+# Python editable-install metadata
+*.egg-info/

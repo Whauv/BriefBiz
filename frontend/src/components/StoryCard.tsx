@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 
 import type { Article } from "../types";
+import { companySlug } from "../utils/slug";
 import { AudioButton } from "./AudioButton";
 import { StatusPill } from "./StatusPill";
 
@@ -61,7 +62,7 @@ export function StoryCard({ article, onOpen, onBookmark, onDismiss }: StoryCardP
           {article.companies.map((company) => (
             <Link
               key={company}
-              to={`/companies/${company.toLowerCase().replace(/\s+/g, "-")}`}
+              to={`/companies/${companySlug(company)}`}
               className="rounded-full border border-white/10 bg-white/10 px-3 py-2 text-sm text-white"
             >
               {company}

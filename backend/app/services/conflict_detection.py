@@ -2,16 +2,27 @@ from __future__ import annotations
 
 from math import sqrt
 
+import structlog
+from openai import AsyncOpenAI
 from sqlalchemy import desc, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import get_settings
 from app.models.article import Article
-from app.services.openai_client import get_openai_client
+from app.services.openai_client import LLM_ERRORS, get_openai_client
 from app.utils.slug import slugify
+
+logger = structlog.get_logger(__name__)
+
+CONFLICT_SIMILARITY_THRESHOLD = 0.82
+CANDIDATE_LIMIT = 25
+LEXICAL_BASIS = ("funding", "layoffs", "regulatory", "startup", "market", "ai", "payments", "ipo")
 
 
 class ConflictDetectionService:
+    def __init__(self, client: AsyncOpenAI | None = None) -> None:
+        self._client = client
+
     async def assign_topic_and_detect_conflict(self, session: AsyncSession, article: Article) -> None:
         candidates = list(
             (
@@ -19,7 +30,7 @@ class ConflictDetectionService:
                     select(Article)
                     .where(Article.id != article.id)
                     .order_by(desc(Article.published_at))
-                    .limit(25)
+                    .limit(CANDIDATE_LIMIT)
                 )
             )
             .scalars()
@@ -43,7 +54,7 @@ class ConflictDetectionService:
                 best_score = score
                 best_match = candidate
 
-        if best_match is None or best_score < 0.82:
+        if best_match is None or best_score < CONFLICT_SIMILARITY_THRESHOLD:
             article.topic_cluster = slugify(article.title)[:120]
             article.sources_disagree = False
             article.conflict_context = {"related_article_ids": [], "perspectives": []}
@@ -88,26 +99,22 @@ class ConflictDetectionService:
         else:
             text = f"{article.title}\n{article.raw_content or ''}"
 
+        if not settings.effective_embedding_model:
+            return self._lexical_embedding(text)
+
         try:
-            if not settings.effective_embedding_model:
-                raise RuntimeError("No embedding model configured.")
-            client = get_openai_client()
+            client = self._client or get_openai_client()
             response = await client.embeddings.create(model=settings.effective_embedding_model, input=text[:4000])
             return response.data[0].embedding
-        except Exception:
-            # lightweight lexical fallback for offline/dev use
-            basis = [
-                "funding",
-                "layoffs",
-                "regulatory",
-                "startup",
-                "market",
-                "ai",
-                "payments",
-                "ipo",
-            ]
-            haystack = text.lower()
-            return [1.0 if token in haystack else 0.0 for token in basis]
+        except LLM_ERRORS:
+            logger.warning("embedding_fallback", article_id=article.id, exc_info=True)
+            return self._lexical_embedding(text)
+
+    @staticmethod
+    def _lexical_embedding(text: str) -> list[float]:
+        """Offline/dev fallback: a presence vector over a fixed keyword basis."""
+        haystack = text.lower()
+        return [1.0 if token in haystack else 0.0 for token in LEXICAL_BASIS]
 
     def _cosine_similarity(self, left: list[float], right: list[float]) -> float:
         if not left or not right:
@@ -115,7 +122,7 @@ class ConflictDetectionService:
         length = min(len(left), len(right))
         left = left[:length]
         right = right[:length]
-        numerator = sum(a * b for a, b in zip(left, right))
+        numerator = sum(a * b for a, b in zip(left, right, strict=False))
         left_norm = sqrt(sum(a * a for a in left))
         right_norm = sqrt(sum(b * b for b in right))
         if left_norm == 0 or right_norm == 0:

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Bell, Bookmark, Home, Radar, Search, User } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 
+import { useUnreadCount } from "../hooks/useUnreadCount";
 import { useAppStore } from "../store/AppStore";
 import { cn } from "../utils/cn";
 
@@ -20,9 +21,9 @@ const tabs = [
 
 export function AppShell({ children }: AppShellProps) {
   const navigate = useNavigate();
-  const { currentUser, isAuthenticated, notifications } = useAppStore();
+  const { currentUser, isAuthenticated } = useAppStore();
   const [search, setSearch] = useState("");
-  const unreadCount = notifications.filter((item) => !item.read).length;
+  const unreadCount = useUnreadCount();
 
   return (
     <div className="min-h-screen bg-hero-grid text-slate-50">

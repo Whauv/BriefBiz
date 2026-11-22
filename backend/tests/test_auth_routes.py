@@ -1,34 +1,14 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from unittest.mock import AsyncMock
+from sqlalchemy import select
 
-import pytest
-
-from app.db.session import get_db_session
-from app.main import app
 from app.models.user import User
 from app.services.auth import decode_access_token
+from tests.factories import auth_header_for, create_user
 
 
-@pytest.mark.asyncio
-async def test_auth_register_returns_token(client, execute_result):
-    session = AsyncMock()
-    session.execute.side_effect = [execute_result(scalar_one_or_none=None)]
-
-    async def refresh_side_effect(user: User):
-        user.id = 1
-        user.created_at = datetime.now(UTC)
-        user.preferences = {"sectors": [], "regions": [], "followed_companies": [], "followed_investors": []}
-
-    session.refresh.side_effect = refresh_side_effect
-
-    async def override_db():
-        yield session
-
-    app.dependency_overrides[get_db_session] = override_db
-
-    response = await client.post(
+async def test_register_returns_token(db_client):
+    response = await db_client.post(
         "/auth/register",
         json={"email": "founder@example.com", "password": "supersecure", "name": "Founder"},
     )
@@ -42,29 +22,78 @@ async def test_auth_register_returns_token(client, execute_result):
     assert token_payload["iss"] == "briefbiz-api"
 
 
-@pytest.mark.asyncio
-async def test_auth_register_normalizes_email_and_name(client, execute_result):
-    session = AsyncMock()
-    session.execute.side_effect = [execute_result(scalar_one_or_none=None)]
-
-    async def refresh_side_effect(user: User):
-        user.id = 2
-        user.created_at = datetime.now(UTC)
-        user.preferences = {"sectors": [], "regions": [], "followed_companies": [], "followed_investors": []}
-
-    session.refresh.side_effect = refresh_side_effect
-
-    async def override_db():
-        yield session
-
-    app.dependency_overrides[get_db_session] = override_db
-
-    response = await client.post(
+async def test_register_normalizes_email_and_name(db_client, db_session):
+    response = await db_client.post(
         "/auth/register",
         json={"email": " Founder@Example.com ", "password": "supersecure", "name": "  Jane   Founder  "},
     )
 
     assert response.status_code == 201
-    created_user = session.add.call_args.args[0]
-    assert created_user.email == "founder@example.com"
-    assert created_user.name == "Jane Founder"
+    user = (await db_session.execute(select(User))).scalar_one()
+    assert user.email == "founder@example.com"
+    assert user.name == "Jane Founder"
+
+
+async def test_register_duplicate_email_conflicts(db_client, db_session):
+    await create_user(db_session, email="dupe@example.com")
+    response = await db_client.post(
+        "/auth/register",
+        json={"email": "dupe@example.com", "password": "supersecure", "name": "Someone"},
+    )
+    assert response.status_code == 409
+
+
+async def test_login_succeeds_with_correct_password(db_client, db_session):
+    await create_user(db_session, email="login@example.com", password="supersecure")
+    response = await db_client.post(
+        "/auth/login",
+        json={"email": "login@example.com", "password": "supersecure"},
+    )
+    assert response.status_code == 200
+    assert response.json()["user"]["email"] == "login@example.com"
+
+
+async def test_login_rejects_wrong_password(db_client, db_session):
+    await create_user(db_session, email="login@example.com", password="supersecure")
+    response = await db_client.post(
+        "/auth/login",
+        json={"email": "login@example.com", "password": "wrongpassword"},
+    )
+    assert response.status_code == 401
+
+
+async def test_login_rejects_unknown_user(db_client):
+    response = await db_client.post(
+        "/auth/login",
+        json={"email": "ghost@example.com", "password": "supersecure"},
+    )
+    assert response.status_code == 401
+
+
+async def test_me_returns_current_user(db_client, db_session):
+    user = await create_user(db_session, email="me@example.com")
+    response = await db_client.get("/auth/me", headers=auth_header_for(user))
+    assert response.status_code == 200
+    assert response.json()["email"] == "me@example.com"
+
+
+async def test_me_requires_authentication(db_client):
+    response = await db_client.get("/auth/me")
+    assert response.status_code == 401
+
+
+async def test_update_preferences_merges_and_normalizes(db_client, db_session):
+    user = await create_user(db_session)
+    response = await db_client.patch(
+        "/auth/preferences",
+        headers=auth_header_for(user),
+        json={"regions": ["  US  ", "us", "Europe"], "followed_companies": ["Acme"]},
+    )
+
+    assert response.status_code == 200
+    prefs = response.json()["preferences"]
+    # Deduped (case-insensitive) and trimmed by the request schema.
+    assert prefs["regions"] == ["US", "Europe"]
+    assert prefs["followed_companies"] == ["Acme"]
+    # Untouched keys are preserved.
+    assert prefs["sectors"] == []

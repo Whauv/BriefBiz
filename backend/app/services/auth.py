@@ -39,7 +39,8 @@ def _verify_legacy_hash(password: str, password_hash: str) -> bool:
     try:
         legacy_context = CryptContext(schemes=["bcrypt_sha256", "bcrypt"], deprecated="auto")
         return legacy_context.verify(password, password_hash)
-    except Exception:
+    except (ValueError, TypeError):
+        # Malformed/unrecognized legacy hash: treat as a non-match rather than erroring.
         return False
 
 

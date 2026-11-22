@@ -1,29 +1,29 @@
 from __future__ import annotations
 
-from unittest.mock import AsyncMock
-
-import pytest
-
-from app.api.deps import get_current_user
-from app.db.session import get_db_session
-from app.main import app
-from app.models.user import User
+from tests.factories import auth_header_for, create_article, create_user
 
 
-@pytest.mark.asyncio
-async def test_article_reaction_validation_rejects_long_payload(client):
-    session = AsyncMock()
-    current_user = User(id=1, email="u@example.com", password_hash="x", name="User", preferences={})
+async def test_reaction_rejects_empty_text(db_client, db_session):
+    user = await create_user(db_session)
+    article = await create_article(db_session)
 
-    async def override_db():
-        yield session
+    response = await db_client.post(
+        f"/articles/{article.id}/reaction",
+        headers=auth_header_for(user),
+        json={"reaction_text": ""},
+    )
 
-    async def override_user():
-        return current_user
+    assert response.status_code == 422
 
-    app.dependency_overrides[get_db_session] = override_db
-    app.dependency_overrides[get_current_user] = override_user
 
-    response = await client.post("/articles/1/reaction", json={"reaction_text": "x" * 101})
+async def test_reaction_rejects_overlong_text(db_client, db_session):
+    user = await create_user(db_session)
+    article = await create_article(db_session)
+
+    response = await db_client.post(
+        f"/articles/{article.id}/reaction",
+        headers=auth_header_for(user),
+        json={"reaction_text": "x" * 101},
+    )
 
     assert response.status_code == 422

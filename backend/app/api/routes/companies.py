@@ -10,14 +10,17 @@ from app.db.session import get_db_session
 from app.models.article import Article
 from app.models.company import ArticleCompany, Company
 from app.schemas.companies import CompanyResponse, TrendingCompanyResponse
-from app.services.serializers import get_article_company_names, serialize_article_card
+from app.services.serializers import serialize_company
 
 router = APIRouter(prefix="/companies", tags=["companies"])
+
+TRENDING_WINDOW = timedelta(days=7)
+TRENDING_LIMIT = 20
 
 
 @router.get("/trending", response_model=list[TrendingCompanyResponse])
 async def trending_companies(session: AsyncSession = Depends(get_db_session)) -> list[TrendingCompanyResponse]:
-    cutoff = datetime.now(UTC) - timedelta(days=7)
+    cutoff = datetime.now(UTC) - TRENDING_WINDOW
     result = await session.execute(
         select(Company.slug, Company.name, func.count(ArticleCompany.article_id).label("article_mentions"))
         .join(ArticleCompany, ArticleCompany.company_id == Company.id)
@@ -25,7 +28,7 @@ async def trending_companies(session: AsyncSession = Depends(get_db_session)) ->
         .where(Article.published_at >= cutoff)
         .group_by(Company.id)
         .order_by(desc("article_mentions"), Company.name)
-        .limit(20)
+        .limit(TRENDING_LIMIT)
     )
     return [TrendingCompanyResponse.model_validate(row._mapping) for row in result]
 
@@ -44,18 +47,4 @@ async def company_profile(slug: str, session: AsyncSession = Depends(get_db_sess
         .order_by(desc(Article.published_at))
     )
     articles = list(article_result.scalars().unique().all())
-    company_map = await get_article_company_names(session, [article.id for article in articles])
-    return CompanyResponse(
-        id=company.id,
-        name=company.name,
-        slug=company.slug,
-        sector=company.sector,
-        hq_country=company.hq_country,
-        funding_stage=company.funding_stage,
-        investors=company.investors,
-        article_count=company.article_count,
-        last_headline=company.last_headline,
-        created_at=company.created_at,
-        articles=[serialize_article_card(article, company_map.get(article.id, [])) for article in articles],
-    )
-
+    return await serialize_company(session, company, articles)

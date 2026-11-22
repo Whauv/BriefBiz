@@ -3,6 +3,9 @@ import { ArrowUpRight, Share2, X } from "lucide-react";
 import { Link } from "react-router-dom";
 
 import type { Article } from "../types";
+import { API_BASE_URL } from "../utils/api";
+import { DEFAULT_BEAR_CASE, DEFAULT_BULL_CASE } from "../utils/copy";
+import { companySlug } from "../utils/slug";
 import { StatusPill } from "./StatusPill";
 
 interface DeepDiveModalProps {
@@ -59,14 +62,11 @@ export function DeepDiveModal({ article, onClose }: DeepDiveModalProps) {
               <div className="text-xs uppercase tracking-[0.3em] text-slate-400">Key Players</div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {article.deep_dive.key_players.map((player) => {
-                  const companySlug = article.companies
-                    .find((company) => company === player)
-                    ?.toLowerCase()
-                    .replace(/\s+/g, "-");
-                  return companySlug ? (
+                  const matchedCompany = article.companies.find((company) => company === player);
+                  return matchedCompany ? (
                     <Link
                       key={player}
-                      to={`/companies/${companySlug}`}
+                      to={`/companies/${companySlug(matchedCompany)}`}
                       className="rounded-full border border-white/10 bg-white/10 px-3 py-2 text-sm text-white"
                     >
                       {player}
@@ -91,10 +91,7 @@ export function DeepDiveModal({ article, onClose }: DeepDiveModalProps) {
                       ? `${disagreementPerspectives[0].source_name} view`
                       : "Bull Case"
                   }
-                  body={
-                    disagreementPerspectives[0]?.summary ??
-                    "Bundled AI products can accelerate enterprise adoption and strengthen the platform position of category leaders."
-                  }
+                  body={disagreementPerspectives[0]?.summary ?? DEFAULT_BULL_CASE}
                 />
                 <Section
                   title={
@@ -102,10 +99,7 @@ export function DeepDiveModal({ article, onClose }: DeepDiveModalProps) {
                       ? `${disagreementPerspectives[1].source_name} view`
                       : "Bear Case"
                   }
-                  body={
-                    disagreementPerspectives[1]?.summary ??
-                    "Horizontal SaaS vendors may lose pricing power before buyers fully trust the bundled AI stack."
-                  }
+                  body={disagreementPerspectives[1]?.summary ?? DEFAULT_BEAR_CASE}
                 />
               </section>
             ) : null}
@@ -125,10 +119,7 @@ export function DeepDiveModal({ article, onClose }: DeepDiveModalProps) {
               <button
                 type="button"
                 onClick={() => {
-                  window.open(
-                    `${import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000"}/articles/${article.id}/share-card/image`,
-                    "_blank",
-                  );
+                  window.open(`${API_BASE_URL}/articles/${article.id}/share-card/image`, "_blank");
                 }}
                 className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm text-white"
               >

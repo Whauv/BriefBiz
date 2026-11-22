@@ -4,7 +4,8 @@ from datetime import datetime
 from enum import Enum
 from typing import TYPE_CHECKING, Any
 
-from sqlalchemy import DateTime, Enum as SAEnum, Float, Index, String, Text, func, text
+from sqlalchemy import DateTime, Float, Index, String, Text, func, text
+from sqlalchemy import Enum as SAEnum
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -63,13 +64,21 @@ class Article(Base):
         ),
     )
     sentiment: Mapped[ArticleSentiment] = mapped_column(
-        SAEnum(ArticleSentiment, name="article_sentiment"),
+        SAEnum(
+            ArticleSentiment,
+            name="article_sentiment",
+            values_callable=lambda enum: [member.value for member in enum],
+        ),
         default=ArticleSentiment.NEUTRAL,
         server_default=ArticleSentiment.NEUTRAL.value,
     )
     impact_score: Mapped[float] = mapped_column(Float, default=0.0, server_default=text("0.0"))
     vertical: Mapped[ArticleVertical] = mapped_column(
-        SAEnum(ArticleVertical, name="article_vertical"),
+        SAEnum(
+            ArticleVertical,
+            name="article_vertical",
+            values_callable=lambda enum: [member.value for member in enum],
+        ),
         default=ArticleVertical.GENERAL,
         server_default=ArticleVertical.GENERAL.value,
     )
@@ -87,16 +96,16 @@ class Article(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
-        default=func.now,
+        default=func.now(),
     )
 
-    companies: Mapped[list["ArticleCompany"]] = relationship(back_populates="article", cascade="all, delete-orphan")
-    bookmarks: Mapped[list["Bookmark"]] = relationship(back_populates="article", cascade="all, delete-orphan")
-    founder_reactions: Mapped[list["FounderReaction"]] = relationship(
+    companies: Mapped[list[ArticleCompany]] = relationship(back_populates="article", cascade="all, delete-orphan")
+    bookmarks: Mapped[list[Bookmark]] = relationship(back_populates="article", cascade="all, delete-orphan")
+    founder_reactions: Mapped[list[FounderReaction]] = relationship(
         back_populates="article",
         cascade="all, delete-orphan",
     )
-    notifications: Mapped[list["Notification"]] = relationship(
+    notifications: Mapped[list[Notification]] = relationship(
         back_populates="article",
         cascade="all, delete-orphan",
     )

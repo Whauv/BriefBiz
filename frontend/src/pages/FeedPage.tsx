@@ -1,15 +1,18 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { BookmarkCheck, RotateCcw, Sparkles } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState } from "react";
 
 import { DeepDiveModal } from "../components/DeepDiveModal";
+import { Panel } from "../components/Panel";
+import { StatCard } from "../components/StatCard";
 import { StoryCard } from "../components/StoryCard";
-import { useFeedData } from "../hooks/useBriefBizData";
+import { useFeedData, useFundingRadarData } from "../hooks/useBriefBizData";
 import { useAppStore } from "../store/AppStore";
 import type { Article } from "../types";
 
 export function FeedPage() {
   const { data: articles = [], isLoading } = useFeedData();
+  const { data: fundingArticles = [] } = useFundingRadarData();
   const { bookmarks, dismissed, dismissArticle, restoreDismissed, toggleBookmark } = useAppStore();
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
 
@@ -81,56 +84,37 @@ export function FeedPage() {
           </div>
 
           <aside className="space-y-4">
-            <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+            <Panel className="p-6">
               <div className="text-xs uppercase tracking-[0.3em] text-slate-400">Funding Radar</div>
               <div className="mt-3 space-y-4">
-                {articles
-                  .filter((article) => article.vertical === "funding")
-                  .slice(0, 3)
-                  .map((article) => (
-                    <button
-                      type="button"
-                      key={article.id}
-                      onClick={() => setSelectedArticle(article)}
-                      className="w-full rounded-3xl border border-white/10 bg-slate-950/50 p-4 text-left"
-                    >
-                      <div className="text-sm text-emerald-200">{article.companies[0]}</div>
-                      <div className="mt-1 text-lg font-semibold text-white">{article.amount ?? "New round"}</div>
-                      <p className="mt-2 text-sm leading-6 text-slate-300">{article.summary_60w.slice(0, 120)}...</p>
-                    </button>
-                  ))}
+                {fundingArticles.slice(0, 3).map((article) => (
+                  <button
+                    type="button"
+                    key={article.id}
+                    onClick={() => setSelectedArticle(article)}
+                    className="w-full rounded-3xl border border-white/10 bg-slate-950/50 p-4 text-left"
+                  >
+                    <div className="text-sm text-emerald-200">{article.companies[0]}</div>
+                    <div className="mt-1 text-lg font-semibold text-white">{article.amount ?? "New round"}</div>
+                    <p className="mt-2 text-sm leading-6 text-slate-300">{article.summary_60w.slice(0, 120)}...</p>
+                  </button>
+                ))}
               </div>
-            </div>
+            </Panel>
 
-            <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6">
+            <Panel className="p-6">
               <div className="text-xs uppercase tracking-[0.3em] text-slate-400">How to use</div>
               <div className="mt-4 space-y-3 text-sm leading-7 text-slate-300">
                 <p>Swipe right to bookmark an article for later.</p>
                 <p>Swipe left to clear it from the current deck.</p>
                 <p>Tap any story to open the deep-dive view with key players and market impact.</p>
               </div>
-            </div>
+            </Panel>
           </aside>
         </section>
       )}
 
       <DeepDiveModal article={selectedArticle} onClose={() => setSelectedArticle(null)} />
-    </div>
-  );
-}
-
-interface StatCardProps {
-  label: string;
-  value: string;
-  icon: ReactNode;
-}
-
-function StatCard({ label, value, icon }: StatCardProps) {
-  return (
-    <div className="rounded-[1.75rem] border border-white/10 bg-white/5 p-5">
-      <div className="mb-3 inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-white/10">{icon}</div>
-      <div className="text-sm uppercase tracking-[0.24em] text-slate-400">{label}</div>
-      <div className="mt-2 text-3xl font-semibold text-white">{value}</div>
     </div>
   );
 }
