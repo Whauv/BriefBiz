@@ -24,8 +24,8 @@ class Notification(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
-        default=func.now,
+        default=func.now(),
     )
 
-    user: Mapped["User"] = relationship(back_populates="notifications")
-    article: Mapped["Article"] = relationship(back_populates="notifications")
+    user: Mapped[User] = relationship(back_populates="notifications")
+    article: Mapped[Article] = relationship(back_populates="notifications")

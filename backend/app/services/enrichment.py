@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 
+import structlog
 from pydantic import BaseModel
 
 from app.models.article import ArticleSentiment
@@ -10,7 +11,9 @@ from app.schemas.enrichment import (
     DeepDivePayload,
     SentimentImpactPayload,
 )
-from app.services.openai_client import OpenAIStructuredService
+from app.services.openai_client import LLM_ERRORS, OpenAIStructuredService
+
+logger = structlog.get_logger(__name__)
 
 
 class SummaryPayload(BaseModel):
@@ -22,8 +25,8 @@ class WhyItMattersPayload(BaseModel):
 
 
 class ArticleEnrichmentService:
-    def __init__(self) -> None:
-        self.openai = OpenAIStructuredService()
+    def __init__(self, openai: OpenAIStructuredService | None = None) -> None:
+        self.openai = openai or OpenAIStructuredService()
 
     async def enrich_article(self, *, title: str, content: str, source_name: str) -> ArticleEnrichmentPayload:
         summary_task = self._generate_summary(title=title, content=content, source_name=source_name)
@@ -38,7 +41,8 @@ class ArticleEnrichmentService:
                 sentiment_task,
                 why_task,
             )
-        except Exception:
+        except LLM_ERRORS:
+            logger.warning("article_enrichment_fallback", title=title, exc_info=True)
             return self._fallback_payload(title=title, content=content)
 
         return ArticleEnrichmentPayload(

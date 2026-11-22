@@ -6,7 +6,6 @@ from time import perf_counter
 import structlog
 
 from app.db.session import AsyncSessionLocal
-
 from app.schemas.ingestion import SourceArticle
 from app.services.article_classifier import ArticleClassifierService
 from app.services.ingestion import ArticleIngestionService

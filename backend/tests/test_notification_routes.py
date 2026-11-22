@@ -1,48 +1,61 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from unittest.mock import AsyncMock
+from sqlalchemy import select
 
-import pytest
-
-from app.api.deps import get_current_user
-from app.db.session import get_db_session
-from app.main import app
 from app.models.notification import Notification
-from app.models.user import User
+from tests.factories import auth_header_for, create_article, create_notification, create_user
 
 
-@pytest.mark.asyncio
-async def test_notifications_list_requires_user_and_returns_items(client, execute_result):
-    current_user = User(
-        id=12,
-        email="ops@example.com",
-        password_hash="hash",
-        name="Ops",
-        preferences={"sectors": [], "regions": [], "followed_companies": [], "followed_investors": []},
-        created_at=datetime.now(UTC),
-    )
-    notification = Notification(
-        id=4,
-        user_id=12,
-        article_id=9,
-        type="followed_company",
-        read=False,
-        created_at=datetime.now(UTC),
-    )
+async def test_list_notifications_orders_unread_first(db_client, db_session):
+    user = await create_user(db_session)
+    article = await create_article(db_session)
+    await create_notification(db_session, user=user, article=article, read=True)
+    await create_notification(db_session, user=user, article=article, read=False)
 
-    session = AsyncMock()
-    session.execute.side_effect = [execute_result(scalars=[notification])]
-
-    async def override_db():
-        yield session
-
-    async def override_current_user():
-        return current_user
-
-    app.dependency_overrides[get_db_session] = override_db
-    app.dependency_overrides[get_current_user] = override_current_user
-    response = await client.get("/notifications")
+    response = await db_client.get("/notifications", headers=auth_header_for(user))
 
     assert response.status_code == 200
-    assert response.json()[0]["type"] == "followed_company"
+    rows = response.json()
+    assert len(rows) == 2
+    assert rows[0]["read"] is False  # unread sorts ahead of read
+
+
+async def test_list_notifications_requires_auth(db_client):
+    response = await db_client.get("/notifications")
+    assert response.status_code == 401
+
+
+async def test_mark_read_all(db_client, db_session):
+    user = await create_user(db_session)
+    article = await create_article(db_session)
+    await create_notification(db_session, user=user, article=article, read=False)
+    await create_notification(db_session, user=user, article=article, read=False)
+
+    response = await db_client.post("/notifications/mark-read", headers=auth_header_for(user), json={})
+
+    assert response.status_code == 200
+    assert response.json()["updated"] == 2
+    unread = (
+        await db_session.execute(
+            select(Notification).where(Notification.user_id == user.id, Notification.read.is_(False))
+        )
+    ).scalars().all()
+    assert unread == []
+
+
+async def test_mark_read_specific_ids(db_client, db_session):
+    user = await create_user(db_session)
+    article = await create_article(db_session)
+    target = await create_notification(db_session, user=user, article=article, read=False)
+    other = await create_notification(db_session, user=user, article=article, read=False)
+
+    response = await db_client.post(
+        "/notifications/mark-read",
+        headers=auth_header_for(user),
+        json={"notification_ids": [target.id]},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["updated"] == 1
+    await db_session.refresh(other)
+    assert other.read is False

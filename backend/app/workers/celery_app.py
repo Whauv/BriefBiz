@@ -21,7 +21,7 @@ celery_app.conf.update(
     beat_schedule={
         "ingest-news-every-15-minutes": {
             "task": "briefbiz.ingestion.run",
-            "schedule": 15 * 60,
+            "schedule": crontab(minute="*/15"),
         },
         "weekly-digest-sunday-8utc": {
             "task": "briefbiz.digest.weekly",

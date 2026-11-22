@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 
 import { useFeedData } from "../hooks/useBriefBizData";
 import { useAppStore } from "../store/AppStore";
+import { companySlug } from "../utils/slug";
 
 export function BookmarksPage() {
   const { data: articles = [] } = useFeedData();
@@ -25,7 +26,7 @@ export function BookmarksPage() {
               {article.companies.map((company) => (
                 <Link
                   key={company}
-                  to={`/companies/${company.toLowerCase().replace(/\s+/g, "-")}`}
+                  to={`/companies/${companySlug(company)}`}
                   className="rounded-full border border-white/10 bg-white/10 px-3 py-2 text-sm text-white"
                 >
                   {company}

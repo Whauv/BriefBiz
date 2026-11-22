@@ -23,11 +23,11 @@ class Bookmark(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
-        default=func.now,
+        default=func.now(),
     )
 
-    user: Mapped["User"] = relationship(back_populates="bookmarks")
-    article: Mapped["Article"] = relationship(back_populates="bookmarks")
+    user: Mapped[User] = relationship(back_populates="bookmarks")
+    article: Mapped[Article] = relationship(back_populates="bookmarks")
 
 
 class FounderReaction(Base):
@@ -40,9 +40,9 @@ class FounderReaction(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
-        default=func.now,
+        default=func.now(),
     )
 
-    article: Mapped["Article"] = relationship(back_populates="founder_reactions")
-    user: Mapped["User"] = relationship(back_populates="founder_reactions")
+    article: Mapped[Article] = relationship(back_populates="founder_reactions")
+    user: Mapped[User] = relationship(back_populates="founder_reactions")
 

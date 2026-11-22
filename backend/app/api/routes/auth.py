@@ -25,7 +25,7 @@ async def register(
     payload: RegisterRequest,
     session: AsyncSession = Depends(get_db_session),
 ) -> TokenResponse:
-    auth_rate_limiter.check(f"register:{payload.email}")
+    await auth_rate_limiter.check(f"register:{payload.email}")
     normalized_email = payload.email.lower()
     existing = await session.execute(select(User).where(User.email == normalized_email))
     if existing.scalar_one_or_none() is not None:
@@ -45,7 +45,7 @@ async def login(
     payload: LoginRequest,
     session: AsyncSession = Depends(get_db_session),
 ) -> TokenResponse:
-    auth_rate_limiter.check(f"login:{payload.email}")
+    await auth_rate_limiter.check(f"login:{payload.email}")
     result = await session.execute(select(User).where(User.email == payload.email.lower()))
     user = result.scalar_one_or_none()
     if user is None or not verify_password(payload.password, user.password_hash):

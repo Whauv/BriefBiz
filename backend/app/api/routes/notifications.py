@@ -9,6 +9,7 @@ from app.db.session import get_db_session
 from app.models.notification import Notification
 from app.models.user import User
 from app.schemas.notifications import MarkReadRequest, MarkReadResponse, NotificationResponse
+from app.services.serializers import serialize_notification
 
 router = APIRouter(prefix="/notifications", tags=["notifications"])
 
@@ -23,18 +24,7 @@ async def get_notifications(
         .where(Notification.user_id == current_user.id)
         .order_by(Notification.read.asc(), Notification.created_at.desc())
     )
-    notifications = list(result.scalars().all())
-    return [
-        NotificationResponse(
-            id=item.id,
-            user_id=item.user_id,
-            article_id=item.article_id,
-            type=item.type,
-            read=item.read,
-            created_at=item.created_at,
-        )
-        for item in notifications
-    ]
+    return [serialize_notification(item) for item in result.scalars().all()]
 
 
 @router.post("/mark-read", response_model=MarkReadResponse)
@@ -50,4 +40,3 @@ async def mark_read(
     result = await session.execute(stmt)
     await session.commit()
     return MarkReadResponse(updated=result.rowcount or 0)
-

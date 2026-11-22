@@ -1,70 +1,56 @@
 from __future__ import annotations
 
-from datetime import UTC, datetime
-from unittest.mock import AsyncMock
-
-import pytest
-
-from app.db.session import get_db_session
-from app.main import app
-from app.models.article import Article, ArticleSentiment, ArticleVertical
-from app.models.company import Company
+from app.models.article import ArticleVertical
+from tests.factories import create_article, create_company
 
 
-@pytest.mark.asyncio
-async def test_search_returns_articles_and_companies(client, execute_result, monkeypatch):
-    article = Article(
-        id=9,
-        title="Fintech unicorn expands",
-        url="https://example.com/fintech",
-        url_hash="hash-fintech",
-        source_name="VentureBeat",
-        source_quality_score=0.8,
-        published_at=datetime.now(UTC),
-        raw_content="Expansion story",
-        summary_60w="A fintech unicorn expanded internationally.",
-        deep_dive={"what_happened": "", "key_players": [], "market_impact": "", "whats_next": ""},
-        sentiment=ArticleSentiment.BULLISH,
-        impact_score=0.82,
-        vertical=ArticleVertical.GENERAL,
-        region="Europe",
-        image_url=None,
-        audio_url=None,
-        why_it_matters="Regional expansion continues.",
-    )
-    company = Company(
-        id=3,
-        name="Finco",
-        slug="finco",
-        sector="FinTech",
-        hq_country="UK",
-        funding_stage="Series C",
-        investors=[],
-        article_count=2,
-        last_headline="Finco expands",
-        created_at=datetime.now(UTC),
+class _FakeES:
+    def __init__(self, ids: list[int]) -> None:
+        self._ids = ids
+
+    async def search(self, **kwargs):
+        return {"hits": {"hits": [{"_id": str(article_id)} for article_id in self._ids]}}
+
+
+async def test_search_preserves_elasticsearch_order(db_client, db_session, monkeypatch):
+    first = await create_article(db_session, title="Alpha result")
+    second = await create_article(db_session, title="Beta result")
+
+    # ES returns second, then first — the route must preserve that ranking.
+    monkeypatch.setattr(
+        "app.services.search_service.get_elasticsearch",
+        lambda: _FakeES([second.id, first.id]),
     )
 
-    class FakeES:
-        async def search(self, **kwargs):
-            return {"hits": {"hits": [{"_id": "9"}]}}
-
-    monkeypatch.setattr("app.api.routes.search.get_elasticsearch", lambda: FakeES())
-
-    session = AsyncMock()
-    session.execute.side_effect = [
-        execute_result(scalars=[article]),
-        execute_result(all_rows=[(9, "Finco")]),
-        execute_result(scalars=[company]),
-    ]
-
-    async def override_db():
-        yield session
-
-    app.dependency_overrides[get_db_session] = override_db
-    response = await client.get("/search", params={"q": "fintech"})
+    response = await db_client.get("/search", params={"q": "result"})
 
     assert response.status_code == 200
-    payload = response.json()
-    assert payload["articles"][0]["id"] == 9
-    assert payload["companies"][0]["slug"] == "finco"
+    assert [item["id"] for item in response.json()["articles"]] == [second.id, first.id]
+
+
+async def test_search_falls_back_to_sql_when_es_unavailable(db_client, db_session, monkeypatch):
+    await create_article(db_session, title="Fintech unicorn expands", vertical=ArticleVertical.GENERAL)
+    await create_article(db_session, title="Totally unrelated")
+
+    def _boom():
+        raise RuntimeError("elasticsearch down")
+
+    monkeypatch.setattr("app.services.search_service.get_elasticsearch", _boom)
+
+    response = await db_client.get("/search", params={"q": "fintech"})
+
+    assert response.status_code == 200
+    titles = [item["title"] for item in response.json()["articles"]]
+    assert titles == ["Fintech unicorn expands"]
+
+
+async def test_search_returns_matching_companies(db_client, db_session, monkeypatch):
+    await create_company(db_session, name="Finco", slug="finco", sector="FinTech")
+
+    monkeypatch.setattr("app.services.search_service.get_elasticsearch", lambda: _FakeES([]))
+
+    response = await db_client.get("/search", params={"q": "finco"})
+
+    assert response.status_code == 200
+    companies = response.json()["companies"]
+    assert companies[0]["slug"] == "finco"

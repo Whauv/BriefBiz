@@ -1,13 +1,17 @@
 from __future__ import annotations
 
+import structlog
+
 from app.models.article import ArticleVertical
 from app.schemas.ingestion import ArticleClassification, CompanyExtractionResult
-from app.services.openai_client import OpenAIStructuredService
+from app.services.openai_client import LLM_ERRORS, OpenAIStructuredService
+
+logger = structlog.get_logger(__name__)
 
 
 class ArticleClassifierService:
-    def __init__(self) -> None:
-        self.openai = OpenAIStructuredService()
+    def __init__(self, openai: OpenAIStructuredService | None = None) -> None:
+        self.openai = openai or OpenAIStructuredService()
 
     async def classify_article(self, title: str, raw_content: str | None) -> ArticleClassification:
         prompt = f"""
@@ -22,7 +26,8 @@ Content: {raw_content or ""}
 """.strip()
         try:
             return await self.openai.complete_json(prompt=prompt, response_model=ArticleClassification)
-        except Exception:
+        except LLM_ERRORS:
+            logger.warning("article_classification_fallback", title=title, exc_info=True)
             return self._fallback_classification(title=title, raw_content=raw_content)
 
     async def extract_companies(self, title: str, raw_content: str | None) -> CompanyExtractionResult:
@@ -35,7 +40,8 @@ Content: {raw_content or ""}
 """.strip()
         try:
             companies = await self.openai.complete_list(prompt=prompt)
-        except Exception:
+        except LLM_ERRORS:
+            logger.warning("company_extraction_fallback", title=title, exc_info=True)
             companies = []
         return CompanyExtractionResult(companies=companies)
 

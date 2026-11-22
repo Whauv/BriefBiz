@@ -32,10 +32,10 @@ class Company(Base):
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         server_default=func.now(),
-        default=func.now,
+        default=func.now(),
     )
 
-    articles: Mapped[list["ArticleCompany"]] = relationship(back_populates="company", cascade="all, delete-orphan")
+    articles: Mapped[list[ArticleCompany]] = relationship(back_populates="company", cascade="all, delete-orphan")
 
 
 class ArticleCompany(Base):
@@ -44,5 +44,5 @@ class ArticleCompany(Base):
     article_id: Mapped[int] = mapped_column(ForeignKey("articles.id", ondelete="CASCADE"), primary_key=True)
     company_id: Mapped[int] = mapped_column(ForeignKey("companies.id", ondelete="CASCADE"), primary_key=True)
 
-    article: Mapped["Article"] = relationship(back_populates="companies")
-    company: Mapped["Company"] = relationship(back_populates="articles")
+    article: Mapped[Article] = relationship(back_populates="companies")
+    company: Mapped[Company] = relationship(back_populates="articles")

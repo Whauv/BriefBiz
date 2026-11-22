@@ -1,21 +1,24 @@
 import axios from "axios";
 
-import { AUTH_TOKEN_KEY } from "./query";
+export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 export const apiClient = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL ?? "/api",
+  baseURL: API_BASE_URL,
   timeout: 10000,
 });
 
-apiClient.interceptors.request.use((config) => {
-  if (typeof window === "undefined") {
-    return config;
-  }
+// Single source of truth for the bearer token at the request layer. The store owns
+// the token and pushes it here via setApiAuthToken, so the interceptor never has to
+// read/parse localStorage on every request.
+let authToken: string | null = null;
 
-  const rawToken = window.localStorage.getItem(AUTH_TOKEN_KEY);
-  const token = rawToken ? JSON.parse(rawToken) : null;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+export function setApiAuthToken(token: string | null) {
+  authToken = token;
+}
+
+apiClient.interceptors.request.use((config) => {
+  if (authToken) {
+    config.headers.Authorization = `Bearer ${authToken}`;
   }
   return config;
 });

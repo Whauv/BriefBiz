@@ -4,8 +4,11 @@ import base64
 from pathlib import Path
 
 import httpx
+import structlog
 
 from app.core.config import get_settings
+
+logger = structlog.get_logger(__name__)
 
 
 class TextToSpeechService:
@@ -29,7 +32,8 @@ class TextToSpeechService:
             async with httpx.AsyncClient(timeout=45.0) as client:
                 response = await client.post(endpoint, json=payload)
                 response.raise_for_status()
-        except Exception:
+        except httpx.HTTPError:
+            logger.warning("tts_synthesis_failed", article_id=article_id, exc_info=True)
             return None
 
         audio_content = response.json().get("audioContent")
