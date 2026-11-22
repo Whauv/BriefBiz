@@ -58,7 +58,9 @@ target-version = "py311"
 select = ["E", "F", "I", "B", "UP", "SIM"]
 # E501 (line length) is intentionally deferred: the codebase has pre-existing long
 # lines that are reflowed as part of the staged refactor. Re-enable once settled.
-ignore = ["E501"]
+# UP042: the `(str, Enum)` enums are intentional and rely on `.value` throughout
+# (incl. SQLAlchemy's values_callable); migrating to StrEnum changes str() behavior.
+ignore = ["E501", "UP042"]
 
 [tool.ruff.lint.flake8-bugbear]
 # FastAPI's dependency-injection markers are the idiomatic default-argument pattern
